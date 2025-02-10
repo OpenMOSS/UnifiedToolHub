@@ -202,11 +202,15 @@ def generate_conversations(instances, tools):
             response_json = extract_json(response,"Response:","EOF")
             if response_json:
                 response_key = f"{tool_name}.{tool_usage_count[tool_name]}"
+                if not isinstance(response_json, dict):
+                    response_json = {"output": response_json}
                 response_cache[response_key] = response_json
                 tool_response_content[response_key] = response_json
             else:
                 response_msg = response
                 response_key = f"{tool_name}.{tool_usage_count[tool_name]}"
+                if not isinstance(response_msg, dict):
+                    response_msg = {"output": response_msg}
                 response_cache[response_key] = response_msg
                 tool_response_content[response_key] = response_msg
             tool_response_message = {
