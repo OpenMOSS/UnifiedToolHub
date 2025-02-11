@@ -111,7 +111,15 @@ report_strategy = [
 
 ## 标签
 
-即将上线！
+```bash
+python run.py tag <配置文件路径>
+```
+
+常见标签策略有：
+
+- [数据类型统计](./demo/tag_config_0.py)
+- [使用本地模型进行标注](./demo/tag_config_1.py)
+- [使用在线模型进行标注](./demo/tag_config_2.py)
 
 ## 训练
 

@@ -3,7 +3,8 @@ import os
 import glob
 import argparse
 from collections import defaultdict
-from typing import Dict, List, Any, Tuple, Set
+from datetime import datetime
+from typing import Dict, List, Any, Tuple, Set, Union
 
 
 class DatasetAnalyzer:
@@ -742,43 +743,224 @@ class DatasetAnalyzer:
             print(f"   ... 以及其他 {len(samples) - max_count} 个样本")
 
 
+def analyze_datasets(input_path: Union[str, List[str]], output_path: str = None, tagging: bool = False) -> Dict:
+    """
+    分析指定路径的数据集
+    
+    Args:
+        input_path: 输入文件或目录路径
+        output_path: 可选，输出结果到JSON文件的路径
+    
+    Returns:
+        分析结果统计字典
+    """
+    # 确定输入文件路径
+    if isinstance(input_path, str):
+        input_path_list = [input_path]
+    elif isinstance(input_path, list):
+        input_path_list = input_path
+    else:
+        print("错误: 输入路径必须是字符串或字符串列表")
+        return {}
+    # 获取所有文件路径
+    file_paths = []
+    for input_path in input_path_list:
+        input_path = os.path.abspath(input_path)
+        if os.path.isdir(input_path):
+            # 如果是目录，获取所有json和jsonl文件
+            file_paths.extend(glob.glob(os.path.join(input_path, "*.json")))
+            file_paths.extend(glob.glob(os.path.join(input_path, "*.jsonl")))
+            # 递归查找子目录中的文件
+            for root, _, _ in os.walk(input_path):
+                if root != input_path:  # 避免重复添加顶层目录
+                    file_paths.extend(glob.glob(os.path.join(root, "*.json")))
+                    file_paths.extend(glob.glob(os.path.join(root, "*.jsonl")))
+        elif os.path.isfile(input_path):
+            # 如果是文件，直接添加
+            file_paths.append(input_path)
+        else:
+            print(f"错误: 输入路径不存在 {input_path}")
+            return {}
+    
+    if not file_paths:
+        print(f"错误: 未找到任何JSON或JSONL文件 in {input_path}")
+        return {}
+    
+    print(f"将分析 {len(file_paths)} 个文件...")
+    
+
+    if tagging:
+        tags = get_tags(file_paths)
+        if output_path:
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(tags, f, ensure_ascii=False, indent=2)
+            print(f"结果已保存到 {output_path}")
+        return tags
+    else:
+        # 创建分析器并分析数据
+        analyzer = DatasetAnalyzer()
+        stats = analyzer.analyze_dataset(file_paths)
+        
+        # 打印结果
+        analyzer.print_report(stats)
+        
+
+        
+        # 保存结果
+        if output_path:
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(stats, f, ensure_ascii=False, indent=2)
+            print(f"结果已保存到 {output_path}")
+        
+        return stats
+
+
+def get_tags(file_paths: List[str]) -> Dict:
+    """
+    为数据集中的每个样本生成标签
+    
+    Args:
+        file_paths: 输入文件路径列表
+    
+    Returns:
+        包含标签信息的字典
+    """
+    # 创建分析器
+    analyzer = DatasetAnalyzer()
+    tagged_files = []
+    tagged_result = {}
+    
+    # 遍历处理每个文件
+    for file_path in file_paths:
+        tagged_files.append(file_path)
+        
+        try:
+            # 加载文件内容
+            data_list = analyzer.load_file(file_path)
+            
+            # 分析每个样本
+            for data_idx, data in enumerate(data_list):
+                # 标准化样本格式
+                sample = analyzer.normalize_sample_format(data)
+                if not sample:
+                    continue
+                
+                # 获取样本ID
+                sample_id = analyzer.get_sample_id(data, data_idx + 1)
+                
+                # 检测标签
+                tags = []
+                
+                # 1. 检测是否是多轮对话 multi-turn
+                user_turns = sum(1 for msg in sample if msg.get("role") == "user")
+                if user_turns > 1:
+                    tags.append("multi-turn")
+                
+                # 2. 检测是否存在多步工具调用 multi-step
+                tool_call_rounds = sum(1 for msg in sample if msg.get("role") in ["tool_call", "tool_call_ground_truth"])
+                if tool_call_rounds > 1:
+                    tags.append("multi-step")
+                
+                # 3和4. 检测单步中是否存在多工具使用和依赖
+                has_multiple_in_one_step = False
+                has_link_in_one_step = False
+                
+                for msg in sample:
+                    if msg.get("role") in ["tool_call", "tool_call_ground_truth"]:
+                        content = msg.get("content", [])
+                        
+                        # 检测单步中是否存在多工具使用
+                        tools_in_round = 0
+                        
+                        if isinstance(content, list):
+                            tools_in_round = len(content)
+                            
+                            # 检测工具依赖
+                            if tools_in_round > 1:
+                                # 将内容转为字符串检测依赖标记
+                                content_str = json.dumps(content)
+                                if "<link>" in content_str and "</link>" in content_str:
+                                    has_link_in_one_step = True
+                        
+                        elif isinstance(content, str):
+                            # 尝试解析字符串内容
+                            try:
+                                parsed_content = json.loads(content)
+                                if isinstance(parsed_content, list):
+                                    tools_in_round = len(parsed_content)
+                                    
+                                    # 检测工具依赖
+                                    if tools_in_round > 1 and "<link>" in content and "</link>" in content:
+                                        has_link_in_one_step = True
+                            except:
+                                # 解析失败，跳过
+                                pass
+                        
+                        if tools_in_round > 1:
+                            has_multiple_in_one_step = True
+                
+                # 添加标签
+                if has_multiple_in_one_step:
+                    tags.append("multiple-in-one-step")
+                
+                if has_link_in_one_step:
+                    tags.append("link-in-one-step")
+                
+                # 添加结果
+                if sample_id in tagged_result:
+                    print(f"警告: 样本ID {sample_id} 重复，已忽略")
+                else:
+                    tagged_result[sample_id] = tags
+                
+        except Exception as e:
+            print(f"处理文件时出错 {file_path}: {str(e)}")
+    
+    # 构建输出结果
+    output_json = {
+        "tagger": "stat_tagger",
+        "tagged_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "tagged_files": tagged_files,
+        "tagged_result": tagged_result,
+        "tag_statistics": get_tag_statistics(tagged_result)
+    }
+    
+    return output_json
+
+def get_tag_statistics(tagged_result: List[Dict]) -> Dict:
+    """计算标签统计信息"""
+    tag_counts = defaultdict(int)
+    total_samples = len(tagged_result)
+    
+    # 计算每个标签的出现次数
+    for item in tagged_result.values():
+        for tag in item:
+            tag_counts[tag] += 1
+    
+    # 计算百分比
+    tag_stats = {}
+    for tag, count in tag_counts.items():
+        percentage = (count / total_samples) * 100 if total_samples > 0 else 0
+        tag_stats[tag] = {
+            "count": count,
+            "percentage": round(percentage, 2)
+        }
+    
+    return {
+        "total_samples": total_samples,
+        "tags": tag_stats,
+    }
+
 def main():
     parser = argparse.ArgumentParser(description="分析数据集中的工具调用")
     parser.add_argument("--input", "-i", type=str, required=True, help="输入文件或目录路径")
     parser.add_argument("--output", "-o", type=str, help="输出结果到JSON文件")
+    parser.add_argument("--tag", "-t", action="store_true", help="是否标记文件")
     args = parser.parse_args()
     
-    # 确定输入文件路径
-    file_paths = []
-    if os.path.isdir(args.input):
-        # 如果是目录，获取所有json和jsonl文件
-        file_paths.extend(glob.glob(os.path.join(args.input, "*.json")))
-        file_paths.extend(glob.glob(os.path.join(args.input, "*.jsonl")))
-    elif os.path.isfile(args.input):
-        # 如果是文件，直接添加
-        file_paths.append(args.input)
-    else:
-        print(f"错误: 输入路径不存在 {args.input}")
-        return
-    
-    if not file_paths:
-        print(f"错误: 未找到任何JSON或JSONL文件 in {args.input}")
-        return
-    
-    print(f"将分析 {len(file_paths)} 个文件...")
-    
-    # 创建分析器并分析数据
-    analyzer = DatasetAnalyzer()
-    stats = analyzer.analyze_dataset(file_paths)
-    
-    # 打印结果
-    analyzer.print_report(stats)
-    
-    # 保存结果
-    if args.output:
-        with open(args.output, 'w', encoding='utf-8') as f:
-            json.dump(stats, f, ensure_ascii=False, indent=2)
-        print(f"结果已保存到 {args.output}")
+    analyze_datasets(args.input, args.output, args.tag)
+
+def stat_tagger(datasets, output_file):
+    analyze_datasets(datasets, output_file, tagging=True)
 
 
 if __name__ == "__main__":

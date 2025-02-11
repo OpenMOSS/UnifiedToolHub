@@ -6,6 +6,7 @@ import json
 
 import models
 from evaluate import evaluate_model_for_single_round_tool_call, evaluate_model_for_multiple_round_tool_call
+from tag import stat_tagger, normal_tagger
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ALL_DATASET = ["API-Bank", "BFCL", "MTU-Bench", "Seal-Tools", "TaskBench", "ToolAlpaca"]
@@ -22,7 +23,9 @@ def setup_parser():
     test_parser.add_argument('config', type=str, help='Config path')
 
     # Tag 子命令
-    tag_parser = subparsers.add_parser('tag', help='Tag new data')
+    tag_parser = subparsers.add_parser('tag', help='Tag new data')    
+    tag_parser.add_argument('config', type=str, help='Config path')
+
     
     return parser
 
@@ -198,6 +201,51 @@ def evaluate_with_config(config_path, debug=False):
                 print(f"报告已保存至: {fout.name}")
 
 
+def tag_with_config(config_path):
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+    
+    spec = importlib.util.spec_from_file_location("config", config_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"无法加载配置文件: {config_path}")
+    
+    config_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(config_module)
+
+    datasets = getattr(config_module, 'datasets', [])
+    output_file = getattr(config_module, 'output_file', None)
+    tagger = getattr(config_module, 'tagger', None)
+
+    for i, dataset in enumerate(datasets):
+        if dataset in ALL_DATASET:
+            datasets[i] = os.path.join(BASE_DIR, "datasets", "processed", dataset)
+
+    if not datasets or not output_file:
+        raise ValueError("输入输出文件未指定")
+
+    if tagger == "stat_tagger":
+        stat_tagger(datasets, output_file)
+    else:
+        model_config = tagger
+        preprocess_func = getattr(config_module, 'preprocess_func', None)
+        postprocess_func = getattr(config_module, 'postprocess_func', None)
+        distribution = getattr(config_module, 'distribution', {"num":1, "id":0, "save_step":-1})
+        if not preprocess_func or not postprocess_func:
+            raise ValueError("预处理和后处理函数未指定")
+        if "path" not in model_config:
+            raise ValueError("模型路径未指定")
+        normal_tagger(
+            datasets,
+            output_file,
+            model_config,
+            preprocess_func,
+            postprocess_func,
+            distribution
+        )
+
+        
+
+
 def main():
     parser = setup_parser()
     args = parser.parse_args()
@@ -207,7 +255,7 @@ def main():
     elif args.command == 'evaluate':
         evaluate_with_config(args.config)
     elif args.command == 'tag':
-        pass
+        tag_with_config(args.config)
     else:
         parser.print_help()
 
