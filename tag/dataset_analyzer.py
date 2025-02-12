@@ -1,3 +1,7 @@
+"""
+本文件的代码主要由 Claude 生成
+"""
+
 import json
 import os
 import glob
@@ -6,6 +10,30 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Any, Tuple, Set, Union
 
+
+def load_file(file_path: str) -> List:
+    """加载文件内容"""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+        
+        # 尝试作为JSON加载
+        try:
+            data_list = json.loads(content)
+            # 如果不是列表，将其包装为列表
+            if not isinstance(data_list, list):
+                data_list = [data_list]
+            return data_list
+        except json.JSONDecodeError:
+            # 尝试按行解析JSONL
+            data_list = []
+            for line in content.splitlines():
+                if line.strip():
+                    try:
+                        data = json.loads(line)
+                        data_list.append(data)
+                    except json.JSONDecodeError:
+                        print(f"警告: 无法解析行: {line[:50]}...")
+            return data_list
 
 class DatasetAnalyzer:
     def __init__(self):
@@ -137,7 +165,7 @@ class DatasetAnalyzer:
         
         try:
             # 加载文件
-            data_list = self.load_file(file_path)
+            data_list = load_file(file_path)
             
             # 分析每个样本
             for data in data_list:
@@ -178,30 +206,6 @@ class DatasetAnalyzer:
         except Exception as e:
             print(f"处理文件时出错 {file_path}: {str(e)}")
             return self.get_empty_stats()
-    
-    def load_file(self, file_path: str) -> List:
-        """加载文件内容"""
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-            
-            # 尝试作为JSON加载
-            try:
-                data_list = json.loads(content)
-                # 如果不是列表，将其包装为列表
-                if not isinstance(data_list, list):
-                    data_list = [data_list]
-                return data_list
-            except json.JSONDecodeError:
-                # 尝试按行解析JSONL
-                data_list = []
-                for line in content.splitlines():
-                    if line.strip():
-                        try:
-                            data = json.loads(line)
-                            data_list.append(data)
-                        except json.JSONDecodeError:
-                            print(f"警告: 无法解析行: {line[:50]}...")
-                return data_list
     
     def normalize_sample_format(self, data: Any) -> List:
         """标准化样本格式"""
@@ -742,17 +746,15 @@ class DatasetAnalyzer:
         if len(samples) > max_count:
             print(f"   ... 以及其他 {len(samples) - max_count} 个样本")
 
-
-def analyze_datasets(input_path: Union[str, List[str]], output_path: str = None, tagging: bool = False) -> Dict:
+def find_json_files(input_path: Union[str, List[str]]) -> List[str]:
     """
-    分析指定路径的数据集
+    查找指定路径下的所有JSON和JSONL文件
     
     Args:
-        input_path: 输入文件或目录路径
-        output_path: 可选，输出结果到JSON文件的路径
+        input_path: 输入文件或目录路径，可以是单个路径或路径列表
     
     Returns:
-        分析结果统计字典
+        找到的所有JSON和JSONL文件路径列表
     """
     # 确定输入文件路径
     if isinstance(input_path, str):
@@ -761,7 +763,8 @@ def analyze_datasets(input_path: Union[str, List[str]], output_path: str = None,
         input_path_list = input_path
     else:
         print("错误: 输入路径必须是字符串或字符串列表")
-        return {}
+        return []
+    
     # 获取所有文件路径
     file_paths = []
     for input_path in input_path_list:
@@ -780,10 +783,28 @@ def analyze_datasets(input_path: Union[str, List[str]], output_path: str = None,
             file_paths.append(input_path)
         else:
             print(f"错误: 输入路径不存在 {input_path}")
-            return {}
     
     if not file_paths:
-        print(f"错误: 未找到任何JSON或JSONL文件 in {input_path}")
+        print(f"错误: 未找到任何JSON或JSONL文件")
+    else:
+        print(f"找到 {len(file_paths)} 个JSON/JSONL文件")
+    
+    return file_paths
+
+def analyze_datasets(input_path: Union[str, List[str]], output_path: str = None, tagging: bool = False) -> Dict:
+    """
+    分析指定路径的数据集
+    
+    Args:
+        input_path: 输入文件或目录路径
+        output_path: 可选，输出结果到JSON文件的路径
+    
+    Returns:
+        分析结果统计字典
+    """
+    file_paths = find_json_files(input_path)
+    if not file_paths:
+        print("错误: 没有找到任何文件进行分析")
         return {}
     
     print(f"将分析 {len(file_paths)} 个文件...")
@@ -836,7 +857,7 @@ def get_tags(file_paths: List[str]) -> Dict:
         
         try:
             # 加载文件内容
-            data_list = analyzer.load_file(file_path)
+            data_list = load_file(file_path)
             
             # 分析每个样本
             for data_idx, data in enumerate(data_list):
@@ -964,4 +985,5 @@ def stat_tagger(datasets, output_file):
 
 
 if __name__ == "__main__":
+    # 在项目根目录可以直接执行本文件用于数据统计 python tag/dataset_analyzer.py -i <file_path>
     main()

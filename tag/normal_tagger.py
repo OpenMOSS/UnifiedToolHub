@@ -10,7 +10,7 @@ from multiprocessing import Pool, cpu_count
 import requests
 from openai import OpenAI
 
-from .dataset_analyzer import get_tag_statistics
+from .dataset_analyzer import find_json_files, get_tag_statistics, load_file
 
 VLLM_LLM_OPTS = [
     "max_model_len",
@@ -40,19 +40,6 @@ class Requester:
         }
         result = self.client.chat.completions.create(**params)
         return result
-
-def load_file(file_path: str):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-        data_list = []
-        for line in content.splitlines():
-            if line.strip():
-                try:
-                    data = json.loads(line)
-                    data_list.append(data)
-                except json.JSONDecodeError:
-                    print(f"警告: 无法解析行: {line[:50]}...")
-        return data_list
 
 def offline_tagger(data_list, model_config, preprocess_func, postprocess_func, from_idx, to_idx, save_step, append_path=None):
     try:
@@ -155,33 +142,7 @@ def online_tagger(requester_list, sampling_params, data_list, preprocess_func, p
     return all_result
 
 def normal_tagger(input_path: str | list[str], output_file, model_config, preprocess_func, postprocess_func, distribution):
-    # 确定输入文件路径
-    if isinstance(input_path, str):
-        input_path_list = [input_path]
-    elif isinstance(input_path, list):
-        input_path_list = input_path
-    else:
-        print("错误: 输入路径必须是字符串或字符串列表")
-        return {}
-    # 获取所有文件路径
-    file_paths = []
-    for input_path in input_path_list:
-        input_path = os.path.abspath(input_path)
-        if os.path.isdir(input_path):
-            # 如果是目录，获取所有json和jsonl文件
-            file_paths.extend(glob.glob(os.path.join(input_path, "*.json")))
-            file_paths.extend(glob.glob(os.path.join(input_path, "*.jsonl")))
-            # 递归查找子目录中的文件
-            for root, _, _ in os.walk(input_path):
-                if root != input_path:  # 避免重复添加顶层目录
-                    file_paths.extend(glob.glob(os.path.join(root, "*.json")))
-                    file_paths.extend(glob.glob(os.path.join(root, "*.jsonl")))
-        elif os.path.isfile(input_path):
-            # 如果是文件，直接添加
-            file_paths.append(input_path)
-        else:
-            print(f"错误: 输入路径不存在 {input_path}")
-            return {}
+    file_paths = find_json_files(input_path)
     
     if not file_paths:
         print(f"错误: 未找到任何JSON或JSONL文件 in {input_path}")
@@ -218,9 +179,9 @@ def normal_tagger(input_path: str | list[str], output_file, model_config, prepro
         tmp_save_file = f"{output_file[:-5]}.tmp.jsonl"
         print(f"每次保存 {save_step} 条数据，暂存到 {tmp_save_file} 文件")
 
-    if not isinstance(model_config["base_url"], list):
-        model_config["base_url"] = [model_config["base_url"]]
     if model_config.get("path").startswith("API_Requester"):
+        if not isinstance(model_config["base_url"], list):
+            model_config["base_url"] = [model_config["base_url"]]
         # 使用 API 进行标记
         requester_list = [
             Requester(base_url=base_url, api_key=model_config["api_key"]) for base_url in model_config["base_url"]

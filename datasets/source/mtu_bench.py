@@ -489,6 +489,8 @@ def process_m_m(from_path, to_path):
         lines = fin.readlines()
 
     to_dump = []
+    exist_m_m_19=False
+
     for line, nextline in zip(lines,lines[1:]):
         error_flag[0] = False
         # initial
@@ -496,6 +498,11 @@ def process_m_m(from_path, to_path):
         next_id = re.match("(M-M_[^_]+)", json.loads(nextline)["id"]).group(1)
         if id == next_id:
             continue
+        if id == "M-M_19":
+            if exist_m_m_19:
+                continue
+            else:
+                exist_m_m_19=True
         if id == "M-M_60":
             continue
         question = json.loads(line)["question"]

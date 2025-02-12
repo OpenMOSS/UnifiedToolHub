@@ -30,17 +30,114 @@ def setup_parser():
     return parser
 
 
-def get_tag_filter(test_datasets, test_with_tag):
-    if len(test_with_tag) == 0:
+def get_tag_filter(test_datasets, test_tags):
+    if test_tags is None:
         return lambda x:True
     else:
-        # TODO: 读取 tag_map
-        tag_map = {}
+        tag_map_list = []
+        mode = test_tags.get("mode", "and")
+        schemes = test_tags.get("schemes", [])
+        for scheme in schemes:
+            if '*' in scheme["path"] and scheme["path"].endswith(".*.json"):
+                union_map = {}
+                dir_path = os.path.dirname(scheme["path"])
+                for filename in os.listdir(dir_path):
+                    if filename.endswith(".json") and filename.startswith(os.path.basename(scheme["path"])[:-len(".*.json")]):
+                        with open(os.path.join(dir_path, filename), "r", encoding="utf-8") as f:
+                            tag_map = json.load(f).get("tagged_result", {})
+                            for key, value in tag_map.items():
+                                if key not in union_map:
+                                    union_map[key] = value
+                                else:
+                                    union_map[key].extend(value)
+                tag_map_list.append(
+                    {
+                        "map": union_map,
+                        "tags": scheme.get("tags", {}),
+                        "mode": scheme.get("mode", "and"),
+                    }
+                )
+            else:
+                with open(scheme["path"], "r", encoding="utf-8") as f:
+                    tag_map_list.append(
+                        {
+                            "map": json.load(f).get("tagged_result", {}),
+                            "tags": scheme.get("tags", {}),
+                            "mode": scheme.get("mode", "and"),
+                        }
+                    )
         def check(data):
-            for tag in tag_map[data[0]["content"]]:
-                if tag in test_with_tag:
-                    return True
-            return False
+            if data[0]["role"] != "id":
+                return False
+            data_id = data[0]["content"]
+            if mode == "or":
+                data_flag = False
+                for tag_map in tag_map_list:
+                    # or - or
+                    if tag_map["mode"] == "or":
+                        scheme_flag = False
+                        if data_id in tag_map["map"]:
+                            tags = tag_map["map"][data_id]
+                            for tag, value in tag_map["tags"].items():
+                                if value == 1 and tag in tags:
+                                    scheme_flag = True
+                                if value == -1 and tag not in tags:
+                                    scheme_flag = True
+                        if scheme_flag:
+                            data_flag = True
+                            break
+                    # or - and
+                    elif tag_map["mode"] == "and":
+                        scheme_flag = True
+                        if data_id in tag_map["map"]:
+                            tags = tag_map["map"][data_id]
+                            for tag, value in tag_map["tags"].items():
+                                if value == 1 and tag not in tags:
+                                    scheme_flag = False
+                                if value == -1 and tag in tags:
+                                    scheme_flag = False
+                        if scheme_flag:
+                            data_flag = True
+                            break
+                    else:
+                        print(f"标签体系{scheme['path']}的模式{tag_map['mode']}不支持，已忽略")
+            elif mode == "and":
+                data_flag = True
+                for tag_map in tag_map_list:
+                    # and - or
+                    if tag_map["mode"] == "or":
+                        scheme_flag = False
+                        if data_id in tag_map["map"]:
+                            tags = tag_map["map"][data_id]
+                            for tag, value in tag_map["tags"].items():
+                                if value == 1 and tag in tags:
+                                    scheme_flag = True
+                                if value == -1 and tag not in tags:
+                                    scheme_flag = True
+                        if not scheme_flag:
+                            data_flag = False
+                            break
+                    # and - and
+                    elif tag_map["mode"] == "and":
+                        scheme_flag = True
+                        if data_id in tag_map["map"]:
+                            tags = tag_map["map"][data_id]
+                            for tag, value in tag_map["tags"].items():
+                                if value == 1 and tag not in tags:
+                                    scheme_flag = False
+                                if value == -1 and tag in tags:
+                                    scheme_flag = False
+                        if not scheme_flag:
+                            data_flag = False
+                            break
+                    else:
+                        print(f"标签体系{scheme['path']}的模式{tag_map['mode']}不支持，已忽略")
+            else:
+                print(f"标签的模式{mode}不支持，已忽略")
+                return True
+                            
+
+            return data_flag
         return check
 
 
@@ -92,6 +189,7 @@ def prepare_datasets(test_datasets, test_mode, tag_filter):
             data = prepare_one_data(data, test_mode)
             if len(data):
                 cut_dataset[key].append(data)
+        print(f"数据集 {key} 中的 {len(cut_dataset[key])} 条数据被选中")
 
     return cut_dataset
 
@@ -114,7 +212,7 @@ def evaluate_with_config(config_path, debug=False):
     test_models = getattr(config_module, 'test_models', [])
     test_datasets = getattr(config_module, 'test_datasets', [])
     test_mode = getattr(config_module, 'test_mode', "single_last")
-    test_with_tag = getattr(config_module, 'test_with_tag', [])
+    test_tags = getattr(config_module, 'test_tags', None)
     test_metrics = getattr(config_module, 'test_metrics', [])
 
     save_strategy = getattr(config_module, 'save_strategy', dict(
@@ -127,7 +225,7 @@ def evaluate_with_config(config_path, debug=False):
     json_config = getattr(config_module, 'json_config', {"path": "./results"})
     lark_config = getattr(config_module, 'lark_config', {})
 
-    tag_filter = get_tag_filter(test_datasets, test_with_tag)
+    tag_filter = get_tag_filter(test_datasets, test_tags)
     datasets = prepare_datasets(test_datasets, test_mode, tag_filter)
 
     if save_strategy.get("save_log") or save_strategy.get("save_output") or save_strategy.get("save_result"):
