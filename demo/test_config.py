@@ -39,30 +39,30 @@ test_datasets = [
 ]
 
 # 使用标签进一步的筛选数据
-test_tags = {
-    "mode": "and", # or: 只要有一个标签体系中匹配成功就选取; and: 所有标签体系都匹配成功才选取
-    "schemes": [ # 数组中包含不同的标签体系
-        {
-            "path": "./tag/files/stat_tags.json", # 标签体系的路径
-            "mode": "and", # or: 只要有一个标签中符合要求就选取; and: 所有标签都符合要求才选取.
-            "tags": { 
+test_tags = dict(
+    mode="and", # or: 只要有一个标签体系中匹配成功就选取; and: 所有标签体系都匹配成功才选取
+    schemes=[ # 数组中包含不同的标签体系
+        dict(
+            path="./tag/files/stat_tags.json", # 标签体系的路径
+            mode="and", # or: 只要有一个标签中符合要求就选取; and: 所有标签都符合要求才选取.
+            tags={ 
                 # 1 表示数据应该包含该标签，-1 表示数据应该不包含该标签
                 "multi-turn": 1,
                 "multiple-in-one-step": 1,
                 "link-in-one-step": -1,
             },
-        }, 
-        {
-            "path": "./tag/files/categories_tags.*.json", 
+        ), 
+        dict(
+            path="./tag/files/categories_tags.*.json", 
             # 使用 * 可以匹配由分布式 tag 产生的系列文件（仅支持 * 在此位置进行通配）
-            "mode": "or",
-            "tags": { 
+            mode="or",
+            tags={ 
                 "Entertainment": 1,
                 "Health_and_Fitness": 1,
             },
-        }
+        )
     ]
-}
+)
 
 test_mode = "single_last"
 # - single_*

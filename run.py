@@ -6,6 +6,7 @@ import json
 
 import models
 from evaluate import evaluate_model_for_single_round_tool_call, evaluate_model_for_multiple_round_tool_call
+from train import prepare_datasets_for_transformers_trainer
 from tag import stat_tagger, normal_tagger
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -17,6 +18,7 @@ def setup_parser():
     
     # Train 子命令
     train_parser = subparsers.add_parser('train', help='Train the model')
+    train_parser.add_argument('config', type=str, help='Config path')
 
     # Test 子命令
     test_parser = subparsers.add_parser('evaluate', help='Evaluate the model')
@@ -141,18 +143,20 @@ def get_tag_filter(test_datasets, test_tags):
         return check
 
 
-def prepare_one_data(data, test_mode):
-    if test_mode == "single_last":
+def prepare_one_data(data, mode="all"):
+    if mode == "single_last":
         for i, message in enumerate(data[::-1]):
             if message["role"] in ["tool_call", "tool_call_ground_truth"] and len(message["content"]) > 0:
                 if i > 0:
                     return data[:-i]
                 else:
                     return data
-    if test_mode == "single_first":
+    elif mode == "single_first":
         for i, message in enumerate(data):
             if message["role"] in ["tool_call", "tool_call_ground_truth"] and len(message["content"]) > 0:
                 return data[:i+1]
+    elif mode == "all":
+        return data
     return []
 
 
@@ -165,7 +169,7 @@ def read_one_dataset(file_path, tag_filter):
                 data_list.append(data)
     return data_list
 
-def prepare_datasets(test_datasets, test_mode, tag_filter):
+def prepare_datasets(test_datasets, mode, tag_filter):
     if len(test_datasets) == 0:
         raise ValueError("没有指定数据集")
     else:
@@ -186,10 +190,11 @@ def prepare_datasets(test_datasets, test_mode, tag_filter):
     for key, dataset in all_dataset.items():
         cut_dataset[key] = []
         for data in dataset:
-            data = prepare_one_data(data, test_mode)
+            data = prepare_one_data(data, mode)
             if len(data):
                 cut_dataset[key].append(data)
-        print(f"数据集 {key} 中的 {len(cut_dataset[key])} 条数据被选中")
+        if len(cut_dataset[key]) > 0:
+            print(f"数据集 {key} 中的 {len(cut_dataset[key])} 条数据被选中")
 
     return cut_dataset
 
@@ -341,15 +346,44 @@ def tag_with_config(config_path):
             distribution
         )
 
-        
+def train_with_config(config_path):
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+    
+    spec = importlib.util.spec_from_file_location("config", config_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"无法加载配置文件: {config_path}")
+    
+    config_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(config_module)
 
+    model_config = getattr(config_module, 'train_models', [])
+    train_framework = getattr(config_module, 'train_framework', "transformers")
+    train_datasets = getattr(config_module, 'train_datasets', [])
+    output_path = getattr(config_module, 'output_path', None)
+    train_tags = getattr(config_module, 'train_tags', None)
+    prepare_strategy = getattr(config_module, 'prepare_strategy', {})
+
+    prepare_strategy["mode"] = prepare_strategy.get("mode", "mixed")
+    prepare_strategy["shuffle"] = prepare_strategy.get("shuffle", True)
+    prepare_strategy["split_ratio"] = prepare_strategy.get("split_ratio", 1)
+
+    tag_filter = get_tag_filter(train_datasets, train_tags)
+    datasets = prepare_datasets(train_datasets, "all", tag_filter)
+
+    if not datasets or not output_path:
+        raise ValueError("输入输出文件未指定")
+
+    if train_framework == "transformers":
+        print()
+        prepare_datasets_for_transformers_trainer(datasets, model_config, output_path, prepare_strategy)
 
 def main():
     parser = setup_parser()
     args = parser.parse_args()
 
     if args.command == 'train':
-        pass
+        train_with_config(args.config)
     elif args.command == 'evaluate':
         evaluate_with_config(args.config)
     elif args.command == 'tag':

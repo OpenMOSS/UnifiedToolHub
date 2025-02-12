@@ -3,6 +3,7 @@ __pycache__
 *.log
 *.json
 *.jsonl
+*.pt
 datasets/processed
 datasets/downloaded
 datasets/tools

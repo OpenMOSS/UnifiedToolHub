@@ -20,8 +20,10 @@ class Qwen_2_5(BaseFormatter):
         self.tokenizer = tokenizer
         self.parser = Hermes2ProToolParser(tokenizer)
         self.additional_prompt = additional_prompt
+        self.generation_prompt = "<|im_start|>assistant\n"
+        self.assistant_end = "<|im_end|>"
     
-    def get_prompt(self, messages, candidate_tools):
+    def get_prompt(self, messages, candidate_tools, add_generation_prompt=True):
         new_messages = []
         for message in messages:
             if message["role"] == "tool_call":
@@ -44,7 +46,7 @@ class Qwen_2_5(BaseFormatter):
             new_messages, 
             tools=candidate_tools, 
             tokenize=False,
-            add_generation_prompt=True,
+            add_generation_prompt=add_generation_prompt,
         )
         if self.additional_prompt:
             self.additional_prompt = "\n" + self.additional_prompt

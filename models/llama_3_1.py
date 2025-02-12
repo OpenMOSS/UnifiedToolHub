@@ -27,8 +27,10 @@ class Llama_3_1(BaseFormatter):
         self.tokenizer = tokenizer
         self.parser = Llama3JsonToolParser(tokenizer)
         self.additional_prompt = additional_prompt
+        self.generation_prompt = "<|start_header_id|>assistant<|end_header_id|>\n\n"
+        self.assistant_end = "<|eot_id|>"
     
-    def get_prompt(self, messages, candidate_tools):
+    def get_prompt(self, messages, candidate_tools, add_generation_prompt=True):
         new_messages = []
 
         for message in messages:
@@ -50,7 +52,7 @@ class Llama_3_1(BaseFormatter):
             new_messages, 
             tools=candidate_tools, 
             tokenize=False,
-            add_generation_prompt=True,
+            add_generation_prompt=add_generation_prompt,
         )
 
         from_text = """Environment: ipython
@@ -61,8 +63,8 @@ Today Date: 26 Jul 2024"""
 Today Date: {date.today().strftime('%d %b %Y')}"""
 
         prompt = prompt.replace(from_text, to_text)
-        prompt = prompt.replace("You are a helpful assistant with tool calling capabilities.").replace(
-            "You are a helpful assistant with tool calling capabilities." + "\n" +self.additional_prompt
+        prompt = prompt.replace("You are a helpful assistant with tool calling capabilities.",
+            "You are a helpful assistant with tool calling capabilities." + "\n" + self.additional_prompt
         )
 
         return prompt
