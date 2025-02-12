@@ -64,7 +64,7 @@ test_tags = dict(
     ]
 )
 
-test_mode = "single_last"
+test_mode = "single_first"
 # - single_*
 #   - single_first 以第一个 tool_call 块为答案，忽略后续内容
 #   - single_last 以最后个 tool_call 块为答案，之前的部分使用 golden 值

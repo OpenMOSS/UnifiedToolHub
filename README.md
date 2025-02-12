@@ -21,12 +21,31 @@
 ## 快速上手
 
 ```bash
-# 处于项目根目录下
+# 以下操作均需要处于项目根目录下，推荐 python >= 3.10
+
+# 安装所需环境（如果使用模型的 API 进行测试，只需要安装最基础的包）
+pip install -r requirements/base.txt
+# 如果需要执行本地的模型进行测试，推荐在安装合适版本的 torch 后安装支持版本的 vllm
+# 在大部分环境中也可以直接执行
+pip install -r requirements/vllm.txt
+
 # 下载并处理数据集
 python datasets deal BFCL
+
+# 修改完善 demo/tag_config_*.py 中的内容
+# 对数据进行标签分类
+python run.py evaluate demo/tag_config_0.py
+
 # 修改完善 demo/test_config.py 中的内容
-# 测试模型的能力
+# 使用标签选出合适的数据并进行测试
 python run.py evaluate demo/test_config.py
+
+# 如果需要训练，请修改完善 demo/train_config.py 中的内容
+# 使用标签选出合适的数据并生成训练用的数据集
+python run.py train demo/train_config.py
+
+# 执行自己的训练代码（读取上一步生成的数据集）
+......
 ```
 
 更多示例参见[文档](https://fudan-nlp.feishu.cn/docx/HXNqdJePPoxEzgxhiJ8cH2HCnRg)
@@ -123,7 +142,58 @@ python run.py tag <配置文件路径>
 
 ## 训练
 
-即将上线！
+使用配置文件筛选合适的数据，转换成适合 huggingface trainer 使用的数据格式。
+
+```bash
+python run.py train <配置文件路径>
+```
+
+一个[配置示例](./demo/train_config.py)如下，其解决的需求是在 Qwen2.5-7B-Instruct 和 Llama-3.1-8B-Instruct 上训练 “单轮、多步、每步只使用一个工具” 的数据。执行命令后会生成两个 `.pt` 文件，分别是两个模型对应的训练数据。
+
+```python
+train_framework = "transformers" # 训练框架的名称
+
+train_models = [
+    "Qwen/Qwen2.5-7B-Instruct",
+    "meta-llama/Llama-3.1-8B-Instruct",
+]
+
+train_datasets = [
+    "API-Bank",
+    "BFCL",
+    "MTU-Bench",
+    "Seal-Tools",
+    "TaskBench",
+    "ToolAlpaca", 
+    # # 除了使用数据集名称外，也可以指定具体的数据文件
+    # "./datasets/processed/BFCL/live_parallel.jsonl",
+    # "./datasets/processed/MTU-Bench/M-M.jsonl"
+]
+
+# 使用标签进一步的筛选数据: 此处选取的是"单轮、多步、每步只使用一个工具"的数据
+train_tags = dict(
+    mode="and", # or: 只要有一个标签体系中匹配成功就选取; and: 所有标签体系都匹配成功才选取
+    schemes=[ # 数组中包含不同的标签体系
+        dict(
+            path="./tag/files/stat_tags.json", # 标签体系的路径
+            mode="and", # or: 只要有一个标签中符合要求就选取; and: 所有标签都符合要求才选取.
+            tags={
+                # 1 表示数据应该包含该标签，-1 表示数据应该不包含该标签
+                "multi-turn": -1,
+                "multi-step": 1,
+                "multiple-in-one-step": -1,
+            },
+        ),
+    ]
+)
+
+prepare_strategy = dict(
+    mode="mixed", # mixed: 将所有数据集混合; separate: 将所有数据集分开
+    shuffle=True, # 是否打乱数据集
+    # split_ratio=0.8, # 训练集和验证集的比例，默认为 1 不产生验证集
+)
+output_path = "./datasets/prepared/single_turn_multi_step" # 数据集的路径
+```
 
 ## 标准化数据集
 
@@ -140,14 +210,14 @@ python datasets deal <数据集>
 
 ### 统计信息
 
-| 数据集     | 数据数量 | 工具数量  |原始仓库 |
-|------------|----------|-----------|----------|
-| API-Bank   |  6200    | 2600      | [Hugging Face](https://huggingface.co/datasets/liminghao1630/API-Bank) |
-| BFCL       |  2302    | 2407      | [Github](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard) |
-| MTU-Bench  |  386     | 181       | [Github](https://github.com/MTU-Bench-Team/MTU-Bench/) |
-| Seal-Tools |  14122   | 4076      | [Github](https://github.com/fairyshine/Seal-Tools) |
-| TaskBench  |  4060    | 40        | [Github](https://github.com/microsoft/JARVIS/tree/main/taskbench) |
-| ToolAlpaca |  4098    | 2046      | [Github](https://github.com/tangqiaoyu/ToolAlpaca) |
+| 数据集     | 数据数量 | 工具数量  |原始仓库 |使用建议 |
+|------------|----------|-----------|----------|----------|
+| API-Bank   |  6200    | 2600      | [Hugging Face](https://huggingface.co/datasets/liminghao1630/API-Bank) | 训练、测试 |
+| BFCL       |  2302    | 2407      | [Github](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard) | 测试 |
+| MTU-Bench  |  386     | 181       | [Github](https://github.com/MTU-Bench-Team/MTU-Bench/) | 测试 |
+| Seal-Tools |  14122   | 4076      | [Github](https://github.com/fairyshine/Seal-Tools) | 训练、测试 |
+| TaskBench  |  4060    | 40        | [Github](https://github.com/microsoft/JARVIS/tree/main/taskbench) | 训练、测试 |
+| ToolAlpaca |  4098    | 2046      | [Github](https://github.com/tangqiaoyu/ToolAlpaca) | 训练、测试 |
 
 数据集处理的[详细介绍](https://fudan-nlp.feishu.cn/docx/W1obdjUhcoS959xPUTdcSYbYn8f)
 

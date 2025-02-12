@@ -2,9 +2,12 @@ import os
 import importlib
 import random
 import tqdm
-import torch
-from torch.utils.data import Dataset
-from transformers import AutoTokenizer
+try:
+    import torch
+    from torch.utils.data import Dataset
+    from transformers import AutoTokenizer
+except ImportError:
+    pass
 
 from models import lowercase_mapping
 

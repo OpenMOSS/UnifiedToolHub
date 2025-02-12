@@ -1,0 +1,4 @@
+openai
+tqdm
+requests
+httpx[socks]
