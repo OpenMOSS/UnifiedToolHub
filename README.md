@@ -1,6 +1,6 @@
 # UnifiedToolHub
 
-🌐 支持语言: [中文](./README.md) | [English](./README.en.md)
+🌐 支持语言: [中文](#unifiedtoolhub) | [English](./README.en.md)
 
 ---
 
