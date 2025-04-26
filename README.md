@@ -337,26 +337,26 @@ output_path = "./datasets/prepared/single_turn_multi_step" # 数据集的路径
 ## 核心开发人员
 
 - `架构` 
-    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `功能` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `功能` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" align="middle"/></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="20" align="middle"/></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
 - `数据`  
-    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `API-Bank` <a href="https://github.com/whispering-dust"><img src="https://github.com/whispering-dust.png" width="20" style="vertical-align: middle;" /></a>
-    - `BFCL` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `MTU-Bench` <a href="https://github.com/ThengyAndrew"><img src="https://github.com/ThengyAndrew.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/feng321654"><img src="https://github.com/feng321654.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `Seal-Tools` <a href="https://github.com/Li-bf"><img src="https://github.com/Li-bf.png" width="20" style="vertical-align: middle;" /></a>
-    - `TaskBench` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `ToolAlpaca` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" style="vertical-align: middle;" /></a>
+    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `API-Bank` <a href="https://github.com/whispering-dust"><img src="https://github.com/whispering-dust.png" width="20" align="middle"/></a>
+    - `BFCL` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" align="middle"/></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `MTU-Bench` <a href="https://github.com/ThengyAndrew"><img src="https://github.com/ThengyAndrew.png" width="20" align="middle"/></a> <a href="https://github.com/feng321654"><img src="https://github.com/feng321654.png" width="20" align="middle"/></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `Seal-Tools` <a href="https://github.com/Li-bf"><img src="https://github.com/Li-bf.png" width="20" align="middle"/></a>
+    - `TaskBench` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `ToolAlpaca` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" align="middle"/></a>
 - `评测`  
-    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `指标` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="20" style="vertical-align: middle;" /></a>
+    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `指标` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" align="middle"/></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="20" align="middle"/></a>
 - `模型`  
-    - `Qwen2.5系列` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `Llama3.1系列` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `API 请求` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" style="vertical-align: middle;" /></a>
+    - `Qwen2.5系列` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `Llama3.1系列` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `API 请求` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" align="middle"/></a>
 - `标注`  
-    - `数据统计` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `通用标注流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
-    - `分类标注（样例）` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" style="vertical-align: middle;" /></a>
+    - `数据统计` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `通用标注流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
+    - `分类标注（样例）` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" align="middle"/></a>
 - `训练`  
-    - `数据准备` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `数据准备` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" align="middle"/></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="middle"/></a>
