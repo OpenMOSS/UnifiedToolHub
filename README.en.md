@@ -333,25 +333,27 @@ output_path = "./datasets/prepared/single_turn_multi_step"  # Path for the outpu
 
 ## Core Developers  
 
-- `Architecture` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
+- `Architecture` 
+    - `Pipeline` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `Functionalities` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
 - `Datasets`  
-    - `Pipeline` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `API-Bank` <a href="https://github.com/whispering-dust"><img src="https://github.com/whispering-dust.png" width="15" /></a>  
-    - `BFCL` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="15" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `MTU-Bench` <a href="https://github.com/ThengyAndrew"><img src="https://github.com/ThengyAndrew.png" width="15" /></a> <a href="https://github.com/feng321654"><img src="https://github.com/feng321654.png" width="15" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `Seal-Tools` <a href="https://github.com/Li-bf"><img src="https://github.com/Li-bf.png" width="15" /></a>  
-    - `TaskBench` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `ToolAlpaca` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="15" /></a>  
+    - `Pipeline` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `API-Bank` <a href="https://github.com/whispering-dust"><img src="https://github.com/whispering-dust.png" width="20" style="vertical-align: middle;" /></a>
+    - `BFCL` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `MTU-Bench` <a href="https://github.com/ThengyAndrew"><img src="https://github.com/ThengyAndrew.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/feng321654"><img src="https://github.com/feng321654.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `Seal-Tools` <a href="https://github.com/Li-bf"><img src="https://github.com/Li-bf.png" width="20" style="vertical-align: middle;" /></a>
+    - `TaskBench` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `ToolAlpaca` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" style="vertical-align: middle;" /></a>
 - `Evaluation`  
-    - `Pipeline` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `Metrics` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="15" /></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="15" /></a>  
+    - `Pipeline` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `Metrics` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="20" style="vertical-align: middle;" /></a>
 - `Models`  
-    - `Qwen2.5 Series` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `Llama3.1 Series` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `API Requester` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="15" /></a>  
+    - `Qwen2.5 Series` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `Llama3.1 Series` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `API Requester` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" style="vertical-align: middle;" /></a>
 - `Annotation`  
-    - `Data Statistics` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `General Annotation Pipeline` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
-    - `Classification Annotation (Demo)` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="15" /></a>  
+    - `Data Statistics` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `General Annotation Pipeline` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
+    - `Classification Annotation (Demo)` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" style="vertical-align: middle;" /></a>
 - `Training`  
-    - `Data Preparation` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="15" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="15" /></a>  
+    - `Data Preparation` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" style="vertical-align: middle;" /></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" style="vertical-align: middle;" /></a>
