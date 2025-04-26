@@ -1,28 +1,63 @@
 # UnifiedToolHub
 
+🌐 支持语言: [中文](#unifiedtoolhub) | [English](./README.en.md)
+
+---
+
 UnifiedToolHub 是一个支持大语言模型工具使用（LLM-based Tool Use）的综合性项目，旨在统一各种工具使用数据集格式并提供便捷的训练、标注和评测功能。它整合了多个主流工具调用数据集（如 API-Bank、BFCL、MTU-Bench 等），并提供了标准化的数据处理流程，使研究人员能够:
 
-- 数据标准化: 将不同来源的工具调用数据转换为统一的格式，便于模型训练和评测
-- 数据标注: 支持对数据集进行多维度标签标注，如单轮/多轮对话、单步/多步工具调用等
-- 模型评测: 提供丰富的评测指标和多种评测模式，支持本地模型和 API 模型的评测
-- 训练数据准备: 将数据转换为适合 transformers 等框架直接使用的格式，简化模型微调流程
+- **数据标准化**: 将不同来源的工具调用数据转换为统一的格式，便于模型训练和评测
+- **数据标注**: 支持对数据集进行多维度标签标注，如单轮/多轮对话、单步/多步工具调用等
+- **模型评测**: 提供丰富的评测指标和多种评测模式，支持本地模型和 API 模型的评测
+- **训练数据准备**: 将数据转换为适合 [transformers](https://huggingface.co/docs/transformers/main/zh/training) 等框架直接使用的格式，简化模型微调流程
+
+
+## 标准化数据集
+
+使用方法
+
+```bash
+# 下载数据集
+python datasets download <数据集>
+# 处理数据集
+python datasets process <数据集>
+# 下载并处理数据集
+python datasets deal <数据集>
+```
+
+具体格式参见[数据格式](#数据格式)
+
+### 统计信息
+
+| 数据集     | 数据数量 | 工具数量  |原始仓库 |使用建议 |
+|------------|----------|-----------|----------|----------|
+| API-Bank   |  6200    | 2600      | [Hugging Face](https://huggingface.co/datasets/liminghao1630/API-Bank) | 训练、测试 |
+| BFCL       |  2302    | 2407      | [Github](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard) | 测试 |
+| MTU-Bench  |  386     | 181       | [Github](https://github.com/MTU-Bench-Team/MTU-Bench/) | 测试 |
+| Seal-Tools |  14122   | 4076      | [Github](https://github.com/fairyshine/Seal-Tools) | 训练、测试 |
+| TaskBench  |  4060    | 40        | [Github](https://github.com/microsoft/JARVIS/tree/main/taskbench) | 训练、测试 |
+| ToolAlpaca |  4098    | 2046      | [Github](https://github.com/tangqiaoyu/ToolAlpaca) | 训练、测试 |
+
+数据集处理的详细过程参见[文档](https://fudan-nlp.feishu.cn/docx/W1obdjUhcoS959xPUTdcSYbYn8f)
+
+> 注意：处理后的数据格式大多与原始数据不同，而本项目在测试时使用的是各个模型的官方模板，因此测试结果不能直接与原论文进行比较；但使用本项目的不同模型、不同数据集之间是可以比较的。
 
 ## 文件结构
 
-- datasets/        数据集相关
-  - downloaded/      原始的数据集下载目录
-  - processed/       标准化的数据集存储目录
-  - tools/           标准化的工具存储目录
-  - source/          每个数据集具体的数据
-  - \_\_main\_\_.py  数据集处理的入口代码
-- demo/            使用示例
-- evaluate/        模型评测代码的目录
-- models/          模型适配代码的目录
-- results/         评测结果的默认存放目录（可以不用）
-- tag/             数据标注代码的目录
-- train/           训练准备代码的目录
-- lark_report.py   将评测结果发送至飞书文档的代码
-- run.py           训练\评测的入口代码
+- `datasets/`        数据集相关
+  - `downloaded/`      原始的数据集下载目录
+  - `processed/`       标准化的数据集存储目录
+  - `tools/`           标准化的工具存储目录
+  - `source/`          每个数据集具体的数据
+  - `__main__.py`  数据集处理的入口代码
+- `demo/`            使用示例
+- `evaluate/`        模型评测代码的目录
+- `models/`          模型适配代码的目录
+- `results/`         评测结果的默认存放目录（可以不用）
+- `tag/`             数据标注代码的目录
+- `train/`           训练准备代码的目录
+- `lark_report.py`   将评测结果发送至飞书文档的代码
+- `run.py`           训练\评测的入口代码
 
 ## 快速上手
 
@@ -36,11 +71,11 @@ pip install -r requirements/base.txt
 pip install -r requirements/vllm.txt
 
 # 下载并处理数据集
-python datasets deal BFCL
+python datasets deal API-Bank BFCL MTU-Bench Seal-Tools TaskBench ToolAlpaca
 
 # 修改完善 demo/tag_config_*.py 中的内容
-# 对数据进行标签分类
-python run.py evaluate demo/tag_config_0.py
+# 对数据进行标注
+python run.py tag demo/tag_config_0.py
 
 # 修改完善 demo/test_config.py 中的内容
 # 使用标签选出合适的数据并进行测试
@@ -100,7 +135,7 @@ test_datasets = [
 ]
 
 # 评测模式
-test_mode = "single_last"
+test_mode = "single_first"
 # - single_*
 #   - single_first 以第一个 tool_call 块为答案，忽略后续内容
 #   - single_last 以最后个 tool_call 块为答案，之前的部分使用 golden 值
@@ -114,7 +149,6 @@ test_metrics = [
 
 # 详细的评测结果存储策略
 save_strategy = dict(
-    save_log=False, # 测试过程中记录 log # 还没开发
     save_output=False, # 记录模型原始的输出
     save_input=False, # 记录模型原始的输入
     save_result=True, # 记录按照 think, content, tool_calls 分隔后的结果
@@ -148,13 +182,13 @@ python run.py tag <配置文件路径>
 
 ## 训练
 
-使用配置文件筛选合适的数据，转换成适合 huggingface trainer 使用的数据格式。
+使用配置文件筛选合适的数据，转换成适合 transformers trainer 使用的数据格式。
 
 ```bash
 python run.py train <配置文件路径>
 ```
 
-一个[配置示例](./demo/train_config.py)如下，其解决的需求是在 Qwen2.5-7B-Instruct 和 Llama-3.1-8B-Instruct 上训练 “单轮、多步、每步只使用一个工具” 的数据。执行命令后会生成两个 `.pt` 文件，分别是两个模型对应的训练数据。
+一个[配置示例](./demo/train_config.py)如下，其解决的需求是在 Qwen2.5-7B-Instruct 和 Llama-3.1-8B-Instruct 上训练 *单轮*、*多步*、*单工具每步* 的数据。执行命令后会生成两个 `.pt` 文件，分别是两个模型对应的训练数据。
 
 ```python
 train_framework = "transformers" # 训练框架的名称
@@ -201,35 +235,9 @@ prepare_strategy = dict(
 output_path = "./datasets/prepared/single_turn_multi_step" # 数据集的路径
 ```
 
-## 标准化数据集
+## 数据格式
 
-使用方法
-
-```bash
-# 下载数据集
-python datasets download <数据集>
-# 处理数据集
-python datasets process <数据集>
-# 下载并处理数据集
-python datasets deal <数据集>
-```
-
-### 统计信息
-
-| 数据集     | 数据数量 | 工具数量  |原始仓库 |使用建议 |
-|------------|----------|-----------|----------|----------|
-| API-Bank   |  6200    | 2600      | [Hugging Face](https://huggingface.co/datasets/liminghao1630/API-Bank) | 训练、测试 |
-| BFCL       |  2302    | 2407      | [Github](https://github.com/ShishirPatil/gorilla/tree/main/berkeley-function-call-leaderboard) | 测试 |
-| MTU-Bench  |  386     | 181       | [Github](https://github.com/MTU-Bench-Team/MTU-Bench/) | 测试 |
-| Seal-Tools |  14122   | 4076      | [Github](https://github.com/fairyshine/Seal-Tools) | 训练、测试 |
-| TaskBench  |  4060    | 40        | [Github](https://github.com/microsoft/JARVIS/tree/main/taskbench) | 训练、测试 |
-| ToolAlpaca |  4098    | 2046      | [Github](https://github.com/tangqiaoyu/ToolAlpaca) | 训练、测试 |
-
-数据集处理的[详细介绍](https://fudan-nlp.feishu.cn/docx/W1obdjUhcoS959xPUTdcSYbYn8f)
-
-### 数据格式
-
-```json
+```python
 [
     {
         "role": "id",
@@ -245,11 +253,11 @@ python datasets deal <数据集>
                     "properties": {
                         "param_1": {
                             "description": "xxx", 
-                            "type": "xxx", // string | 
+                            "type": "xxx", # string | 
                             "default": "xxx"
                         },
                         "param_2": {
-                            ...
+                            ## ...
                         }
                     }, 
                     "required": ["param_1"]
@@ -259,22 +267,22 @@ python datasets deal <数据集>
                         "description": "xxx",
                         "type": "xxx",
                     }
-                    ...
+                    # ...
                 }
         }, 
-        ...
+        # ...
         ]
     },{
         "role": "user",
         "content": "用户的第一轮提问"
     },{
         "role": "assistant",    
-        "hidden": true, // 没有此字段则值为 false，表示不影响
+        "hidden": True, ## 没有此字段则值为 False，表示模型思考展示给用户
         "content": "模型的内部思考"
     },{
         "role": "tool_call",    
         "content": [
-            // 列表中可以包含多个工具的调用，调用之间可以存在依赖关系
+            # 列表中可以包含多个工具的调用，调用之间可以存在依赖关系
             {
                 "name": "tool_1",
                 "parameters": {
@@ -284,7 +292,7 @@ python datasets deal <数据集>
             }, {
                 "name": "tool_2",
                 "parameters": {
-                    // 使用特殊字符 <link> </link> 包裹的部分表示之前工具调用的返回值
+                    # 使用特殊字符 <link> </link> 包裹的部分表示之前工具调用的返回值
                     "param_3": "<link>tool_1.0.rsp_1</link>"
                 },
                 "depend_on": ["tool_1.0"]
@@ -303,16 +311,16 @@ python datasets deal <数据集>
         }
     },{
         "role": "assistant",
-        "hidden": false,
+        "hidden": False,
         "content": "模型给用户的第一轮回复"
     },{
         "role": "user",
         "content": "用户的第二轮提问"
     },{
-        // 模型可以不生成内部思考，直接进行解答
+        # 模型可以不生成内部思考，直接进行解答
         "role": "tool_call_ground_truth",
         "content": [
-            // 在 BFCL 的数据格式中，允许每个参数有若干个候选答案
+            # 在 BFCL 的数据格式中，允许每个参数有若干个候选答案
             {
                 "name": "tool_1",
                 "parameters": {
@@ -325,3 +333,30 @@ python datasets deal <数据集>
     }
 ]
 ```
+
+## 核心开发人员
+
+- `架构` 
+    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `功能` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" align="center"/></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="20" align="center"/></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+- `数据`  
+    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `API-Bank` <a href="https://github.com/whispering-dust"><img src="https://github.com/whispering-dust.png" width="20" align="center"/></a>
+    - `BFCL` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" align="center"/></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `MTU-Bench` <a href="https://github.com/ThengyAndrew"><img src="https://github.com/ThengyAndrew.png" width="20" align="center"/></a> <a href="https://github.com/feng321654"><img src="https://github.com/feng321654.png" width="20" align="center"/></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `Seal-Tools` <a href="https://github.com/Li-bf"><img src="https://github.com/Li-bf.png" width="20" align="center"/></a>
+    - `TaskBench` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `ToolAlpaca` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" align="center"/></a>
+- `评测`  
+    - `流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `指标` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" align="center"/></a> <a href="https://github.com/zhenyu228"><img src="https://github.com/zhenyu228.png" width="20" align="center"/></a>
+- `模型`  
+    - `Qwen2.5系列` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `Llama3.1系列` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `API 请求` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" align="center"/></a>
+- `标注`  
+    - `数据统计` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `通用标注流程` <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
+    - `分类标注（样例）` <a href="https://github.com/LinqiY"><img src="https://github.com/LinqiY.png" width="20" align="center"/></a>
+- `训练`  
+    - `数据准备` <a href="https://github.com/euReKa025"><img src="https://github.com/euReKa025.png" width="20" align="center"/></a> <a href="https://github.com/WillQvQ"><img src="https://github.com/WillQvQ.png" width="20" align="center"/></a>
