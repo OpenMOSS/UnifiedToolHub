@@ -39,7 +39,7 @@ For specific formats, refer to [Data Format](#data-format).
 
 For detailed dataset processing, refer to the [documentation](https://fudan-nlp.feishu.cn/docx/W1obdjUhcoS959xPUTdcSYbYn8f).
 
-> Note: The processed data formats often differ from the original datasets. Since this project uses the official templates of each model for testing, the evaluation results cannot be directly compared with those in the original papers. However, comparisons between different models or datasets within this project are valid.
+> Note: This project uses the official templates of each model during evaluation, whereas some datasets in the original papers adopt customized dialogue formats. Therefore, the results reported in the papers are not directly comparable to those obtained using this project. We recommend using this project consistently for evaluation to facilitate fair comparisons across different datasets and models.
 
 ## File Structure
 
