@@ -97,9 +97,6 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
 
     # 对每个数据集进行评估
     for dataset_name, dataset in datasets.items():
-        if len(dataset)==0:
-            print(f"\n\n数据集：{dataset_name}中没有符合条件的数据\n\n")
-            continue
         print(f"\n\n正在评测数据集：{dataset_name}\n\n")
         save_list = []
         prompt_list = []
@@ -404,7 +401,7 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
                     golden_answer = data[-1]["content"]
                     test_result = metrics_for_bfcl(golden_answer, result["tool_call"],is_strict=is_strict)
                 
-                if evaluate_mode=="average":
+                if evaluate_mode=="avg":
                     # 累计计算平均结果
                     for k,v in test_result.items():
                         if k in final_result:
@@ -419,7 +416,7 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
                                 final_result[k] += v/data_num[i]
                             else:
                                 final_result[k] = v/data_num[i]
-                if evaluate_mode != "average" and tag==False:
+                if evaluate_mode != "avg" and tag==False:
                     pass
                 else:
                     save_list.append({

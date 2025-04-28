@@ -278,10 +278,10 @@ def evaluate_with_config(config_path, debug=False):
     
         if test_mode.startswith("single"):
             all_result = evaluate_model_for_single_round_tool_call(model_config, datasets, test_metrics, save_strategy, debug=debug, is_strict=is_strict)
-        elif test_mode=="multiple_average":
-            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy,evaluate_mode="average", debug=debug, is_strict=is_strict)
+        elif test_mode=="multiple_avg":
+            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy,evaluate_mode="avg", debug=debug, is_strict=is_strict)
         else:  # multiple_seq
-            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy,evaluate_mode="sequential", debug=debug, is_strict=is_strict)
+            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy,evaluate_mode="seq", debug=debug, is_strict=is_strict)
         to_send = []
         for dataset_name, result in all_result.items():
             to_send.append({
