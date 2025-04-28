@@ -68,7 +68,8 @@ test_mode = "single_first"
 # - single_*
 #   - single_first 以第一个 tool_call 块为答案，忽略后续内容
 #   - single_last 以最后个 tool_call 块为答案，之前的部分使用 golden 值
-
+#   - multiple_seq 多轮调用中，当前面的调用正确，才评估接下来的调用
+#   - multiple_avg 多轮调用中，直接评估所有轮次 
 test_metrics = [
     "ExactMatch",
     "ToolAccuracy",

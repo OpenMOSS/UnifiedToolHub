@@ -155,6 +155,8 @@ def prepare_one_data(data, mode="all"):
         for i, message in enumerate(data):
             if message["role"] in ["tool_call", "tool_call_ground_truth"] and len(message["content"]) > 0:
                 return data[:i+1]
+    elif mode.startswith("multiple"):
+        return data
     elif mode == "all":
         return data
     return []
@@ -276,9 +278,10 @@ def evaluate_with_config(config_path, debug=False):
     
         if test_mode.startswith("single"):
             all_result = evaluate_model_for_single_round_tool_call(model_config, datasets, test_metrics, save_strategy, debug=debug, is_strict=is_strict)
-        else:
-            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy, debug=debug)
-
+        elif test_mode=="multiple_avg":
+            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy,evaluate_mode="avg", debug=debug, is_strict=is_strict)
+        else:  # multiple_seq
+            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy,evaluate_mode="seq", debug=debug, is_strict=is_strict)
         to_send = []
         for dataset_name, result in all_result.items():
             to_send.append({
