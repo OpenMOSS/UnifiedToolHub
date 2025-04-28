@@ -68,8 +68,9 @@ test_mode = "single_first"
 # - single_*
 #   - single_first 以第一个 tool_call 块为答案，忽略后续内容
 #   - single_last 以最后个 tool_call 块为答案，之前的部分使用 golden 值
-#   - multiple_seq 多轮调用中，当前面的调用正确，才评估接下来的调用
-#   - multiple_avg 多轮调用中，直接评估所有轮次 
+# - multiple_*
+#   - multiple_seq 多轮调用中，当前面的调用正确，才评估接下来的调用，计算平均分
+#   - multiple_avg 多轮调用中，默认前面调用正确，直接评估所有轮次，计算平均分
 test_metrics = [
     "ExactMatch",
     "ToolAccuracy",
@@ -77,7 +78,6 @@ test_metrics = [
 ]
 
 save_strategy = dict(
-    save_log=False, # 测试过程中记录 log # 还没开发
     save_output=False, # 记录模型原始的输出
     save_input=False, # 记录模型原始的输入
     save_result=True, # 记录按照 think, content, tool_calls 分隔后的结果

@@ -12,12 +12,10 @@ MAX_OPS = 500  # 由飞书规定的单次最大操作数量
 
 class LarkReport:
 
-    def __init__(self, app_id, app_secret, app_verification_token, bitable_url=None, app_address=""):
+    def __init__(self, app_id, app_secret, bitable_url=None):
         self.storage = {}
         self.APP_ID = app_id
         self.APP_SECRET = app_secret
-        self.APP_VERIFICATION_TOKEN = app_verification_token
-        self.APP_ADDRESS = app_address
         self._bitable_dict = {}
         if bitable_url:
             self.add_bitable("default", bitable_url)
@@ -347,35 +345,47 @@ class LarkReport:
         item = self._bitable_dict[table_name]
         return item["app_token"], item["table_id"]
 
-    def send(self, res: dict| list, table_name: str="default"):
-        if isinstance(res, list):
-            for res_item in res:
-                self.send(res_item, table_name)
-                time.sleep(WAITING_TIME)
-        else:
-            print("*" * 80)
-            print("正在使用飞书 API 发送数据, 下面会进行若干 Post 请求, 请保持网络通常")
-            if "time" not in res and "时间" not in res:
-                res = {
-                    **res,
-                    "时间": round(datetime.now().timestamp() * 1000)
+    def send(self, res: dict | list, table_name: str="default"):
+        print("*" * 80)
+        print("正在使用飞书 API 发送数据, 下面会进行若干 Post 请求, 请保持网络通畅")
+        
+        app_token, table_id = self.bitable(table_name)
+        fields = set([f["field_name"] for f in self.bitable_field_list_all(app_token, table_id)])
+        
+        time_now = datetime.now().timestamp()
+        if not isinstance(res, list):
+            res = [res]
+        records_to_create = []
+        for res_item in res:
+            if "time" not in res_item and "时间" not in res_item:
+                res_item = {
+                    **res_item,
+                    "时间": round(time_now * 1000)
                 }
-            app_token, table_id = self.bitable(table_name)
-            fields = set([f["field_name"] for f in self.bitable_field_list_all(app_token, table_id)])
-            for key, value in res.items():
+
+            for key, value in list(res_item.items()):
                 if inspect.isfunction(value):
-                    res[key] = str(value.__name__)
-                elif isinstance(value, int) or isinstance(value, float) or isinstance(value, bool):
-                    res[key] = value
+                    res_item[key] = str(value.__name__)
+                elif isinstance(value, (int, float, bool)):
+                    res_item[key] = value
                 else:
-                    res[key] = str(value)
+                    res_item[key] = str(value)
+                
                 if key not in fields:
-                    if isinstance(value, int) or isinstance(value, float):
+                    if isinstance(value, (int, float)):
                         field_type = 2
                     else:
                         field_type = 1
                     self.bitable_field_create(app_token, table_id, key, field_type)
-            print(res)
-            self.bitable_create_all(app_token, table_id, [{"fields": res}])
-            print("*" * 80)
-            print()
+                    fields.add(key)
+            
+            records_to_create.append({"fields": res_item})
+        
+        if len(records_to_create) == 1:
+            print(records_to_create[0]["fields"])
+        
+        print(f"正在批量添加 {len(records_to_create)} 条记录...")
+        self.bitable_create_all(app_token, table_id, records_to_create)
+        
+        print("*" * 80)
+        print()

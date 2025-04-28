@@ -31,7 +31,6 @@ def setup_parser():
     
     return parser
 
-
 def get_tag_filter(test_datasets, test_tags):
     if test_tags is None:
         return lambda x:True
@@ -142,7 +141,6 @@ def get_tag_filter(test_datasets, test_tags):
             return data_flag
         return check
 
-
 def prepare_one_data(data, mode="all"):
     if mode == "single_last":
         for i, message in enumerate(data[::-1]):
@@ -197,10 +195,29 @@ def prepare_datasets(test_datasets, mode, tag_filter):
                 cut_dataset[key].append(data)
         if len(cut_dataset[key]) > 0:
             print(f"数据集 {key} 中的 {len(cut_dataset[key])} 条数据被选中")
+        else:
+            del cut_dataset[key]
+            print(f"数据集 {key} 中没有数据被选中")
 
     return cut_dataset
 
-    
+def get_average_result(all_result):
+    average_result = {}
+    all_metrics = set()
+    all_names = set()
+    total_samples = 0
+    for name, dataset_result in all_result.items():
+        total_samples += dataset_result["Size"]
+        all_names.add(name.split("_")[0])
+        all_metrics.update(dataset_result.keys())
+    for metric in all_metrics:
+        if metric != "Size":
+            average_result[metric] = sum([
+                all_result[dataset_name]["Size"] * dataset_result[metric]
+                for dataset_name, dataset_result in all_result.items()
+            ]) / total_samples
+    average_result["Size"] = total_samples
+    all_result["Avg-[{}]".format(",".join(list(all_names)))] = average_result
 
 def evaluate_with_config(config_path, debug=False):
     if not os.path.exists(config_path):
@@ -223,7 +240,6 @@ def evaluate_with_config(config_path, debug=False):
     test_metrics = getattr(config_module, 'test_metrics', [])
 
     save_strategy = getattr(config_module, 'save_strategy', dict(
-        save_log=True, 
         save_output=False, 
         save_result=False,
 
@@ -235,7 +251,7 @@ def evaluate_with_config(config_path, debug=False):
     tag_filter = get_tag_filter(test_datasets, test_tags)
     datasets = prepare_datasets(test_datasets, test_mode, tag_filter)
 
-    if save_strategy.get("save_log") or save_strategy.get("save_output") or save_strategy.get("save_result"):
+    if save_strategy.get("save_output") or save_strategy.get("save_result"):
         save_path = save_strategy["save_path"]
         if save_strategy.get("with_timestamp"):
             only_date = save_strategy.get("only_date", False)
@@ -278,10 +294,10 @@ def evaluate_with_config(config_path, debug=False):
     
         if test_mode.startswith("single"):
             all_result = evaluate_model_for_single_round_tool_call(model_config, datasets, test_metrics, save_strategy, debug=debug, is_strict=is_strict)
-        elif test_mode=="multiple_avg":
-            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy,evaluate_mode="avg", debug=debug, is_strict=is_strict)
-        else:  # multiple_seq
-            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy,evaluate_mode="seq", debug=debug, is_strict=is_strict)
+        elif test_mode.startswith("multiple"):
+            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy, evaluate_mode=test_mode.split("_")[1], debug=debug, is_strict=is_strict)
+        get_average_result(all_result)
+
         to_send = []
         for dataset_name, result in all_result.items():
             to_send.append({
