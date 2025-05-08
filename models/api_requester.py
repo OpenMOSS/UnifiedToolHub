@@ -53,14 +53,17 @@ class API_Requester:
             api_key = self.api_key
         )
         self.model = model
+        self.tool_name_dict = {}
     
     def convert_to_openai_tools(self, candidate_tools):
         param_type_map = {
             "str": "string",
             "int": "integer",
             "float": "number",
+            "tuple": "array",
             "list": "array",
-            "dict": "object"
+            "dict": "object",
+            "any": "object",
         }
     
         def map_type(type_value):
@@ -76,8 +79,7 @@ class API_Requester:
             result = {}
             
             if isinstance(properties_obj, dict):
-                for key, value in properties_obj.items():
-                    prop_key = key.replace(".", "_")
+                for prop_key, value in properties_obj.items():
                     if isinstance(value, dict):
                         prop_value = dict(value)  # 复制一份避免修改原始数据
                         
@@ -105,10 +107,12 @@ class API_Requester:
     
         formatted_tools = []
         for tool in candidate_tools:
+            tool_name = tool['name'].strip().replace(".", "_")
+            self.tool_name_dict[tool_name] = tool['name']
             gpt_tool = {
                 "type": "function",
                 "function": {
-                    "name": tool['name'].strip().replace(".", "_"),
+                    "name": tool_name,
                     "description": tool['description'],
                     "parameters": {
                         "type": "object",
@@ -126,7 +130,7 @@ class API_Requester:
                 
                 if isinstance(properties, list):
                     for prop in properties:
-                        param_name = prop['name'].replace(".", "_")
+                        param_name = prop['name']
                         param_info = {
                             "type": "string",
                             "description": prop.get('description', '')
@@ -157,9 +161,7 @@ class API_Requester:
                 
                 elif isinstance(properties, dict):
                     processed_properties = {}
-                    for param_name, param_details in properties.items():
-                        param_name = param_name.replace(".", "_")
-                        
+                    for param_name, param_details in properties.items():                        
                         if isinstance(param_details, str):
                             param_info = {
                                 "type": "string",
@@ -392,16 +394,21 @@ class API_Requester:
         result = {
             "think": "",
             "content":"",
-            "tool_call": ""
+            "tool_call": []
         }
-        result["content"] = response.message.content
-        tool_calls = []
-        if response.message.tool_calls:
-            gpt_tool_calls = self.convert_tool_calls(response.message.tool_calls)
-            for gpt_tool_call in gpt_tool_calls:
-                tool_call = {}
-                tool_call["name"] = gpt_tool_call["function"]["name"]
-                tool_call["parameters"] = json.loads(gpt_tool_call["function"]["arguments"])
-                tool_calls.append(tool_call)
-        result["tool_call"] = tool_calls
+        try:
+            result["content"] = response.message.content
+            tool_calls = []
+            if response.message.tool_calls:
+                gpt_tool_calls = self.convert_tool_calls(response.message.tool_calls)
+                for gpt_tool_call in gpt_tool_calls:
+                    tool_call = {}
+                    tool_call["name"] = gpt_tool_call["function"]["name"]
+                    if tool_call["name"] in self.tool_name_dict:
+                        tool_call["name"] = self.tool_name_dict[tool_call["name"]]
+                    tool_call["parameters"] = json.loads(gpt_tool_call["function"]["arguments"])
+                    tool_calls.append(tool_call)
+            result["tool_call"] = tool_calls
+        except Exception as e:
+            print(f"Error retrieving content: {e}")
         return result

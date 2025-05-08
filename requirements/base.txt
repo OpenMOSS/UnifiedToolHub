@@ -1,4 +1,5 @@
-openai
-tqdm
-requests
 httpx[socks]
+openai
+requests
+scipy
+tqdm
