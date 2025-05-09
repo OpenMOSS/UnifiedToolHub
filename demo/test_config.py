@@ -3,7 +3,17 @@ is_strict=True # 是否严格匹配，针对字典中值两端的空格进行
 
 test_models = [
     dict(
-        type="Qwen_2_5", # 也可以不指定类型，可自动推测
+        type="Qwen_3", # 可以不指定类型，可自动推测
+        path="Qwen/Qwen3-14B", # 也可以使用本地模型路径
+        tp=1,
+        sampling_params=dict(
+            max_tokens=4096,
+            temperature=0.7,
+        ),
+        enable_thinking=False, # 仅对 Qwen_3 系列模型生效
+    ),    
+    dict(
+        type="Qwen_2_5", # 可以不指定类型，可自动推测
         path="Qwen/Qwen2.5-7B-Instruct", # 也可以使用本地模型路径
         tp=1,
         sampling_params=dict(

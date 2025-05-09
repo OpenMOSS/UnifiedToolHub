@@ -13,6 +13,9 @@ VLLM_LLM_OPTS = [
     "trust_remote_code",
 ]
 
+THINKING_MODLES = [
+    "Qwen_3",
+]
 
 def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, save_strategy, debug=False, is_strict=True):
     """
@@ -86,8 +89,18 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
             pipeline_parallel_size=model_config.get("pp", 1),
             **opts
         )
+        additional_params = {}
+        if "enable_thinking" in model_config:
+            if model_config["type"] in THINKING_MODLES:
+                additional_params["enable_thinking"] = model_config["enable_thinking"]
+            else:
+                print("enable_thinking 仅对 {} 系列模型生效，已忽略".format(THINKING_MODLES))
         # 获取格式化器
-        formatter = model_config["formatter"](llm.get_tokenizer(), additional_prompt=model_config.get("additional_prompt", ""))
+        formatter = model_config["formatter"](
+            llm.get_tokenizer(), 
+            additional_prompt=model_config.get("additional_prompt", ""),
+            **additional_params
+        )
         # 设置采样参数
         sampling_params = SamplingParams(**{
             **formatter.SAMPLING_PARAMS,
@@ -202,10 +215,10 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
             path = os.path.join(save_strategy['save_path'], "_".join([timestamp, model_name, dataset_name.split("/")[-1]]))
             if save_strategy.get("jsonl", False):     
                 with open(f"{path}.jsonl", "w") as fout:
-                    fout.write("\n".join(json.dumps(key_map(save)) for save in save_list))
+                    fout.write("\n".join(json.dumps(key_map(save), ensure_ascii=False) for save in save_list))
             else:
                 with open(f"{path}.json", "w") as fout:
-                    json.dump(save_list, fout, indent=4)
+                    json.dump(save_list, fout, ensure_ascii=False, indent=4)
 
         # 计算最终结果
         all_result[dataset_name] = {
@@ -296,8 +309,18 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
             pipeline_parallel_size=model_config.get("pp", 1),
             **opts
         )
+        additional_params = {}
+        if "enable_thinking" in model_config:
+            if model_config["type"] in THINKING_MODLES:
+                additional_params["enable_thinking"] = model_config["enable_thinking"]
+            else:
+                print("enable_thinking 仅对 {} 系列模型生效，已忽略".format(THINKING_MODLES))
         # 获取格式化器
-        formatter = model_config["formatter"](llm.get_tokenizer(), additional_prompt=model_config.get("additional_prompt", ""))
+        formatter = model_config["formatter"](
+            llm.get_tokenizer(), 
+            additional_prompt=model_config.get("additional_prompt", ""),
+            **additional_params
+        )
         # 设置采样参数
         sampling_params = SamplingParams(**{
             **formatter.SAMPLING_PARAMS,
@@ -441,9 +464,9 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
             path = os.path.join(save_strategy['save_path'], "_".join([timestamp, model_name, dataset_name.split("/")[-1]]))
             with open(f"{path}.jsonl", "w") as fout:
                 if save_strategy.get("jsonl", False):
-                    fout.write("\n".join(json.dumps(key_map(save)) for save in save_list))
+                    fout.write("\n".join(json.dumps(key_map(save), ensure_ascii=False) for save in save_list))
                 else:
-                    json.dump(save_list, fout, indent=4)
+                    json.dump(save_list, fout, ensure_ascii=False, indent=4)
 
         # 计算最终结果
         # 长度和工具调用数按调用轮次进行平均

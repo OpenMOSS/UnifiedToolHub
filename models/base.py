@@ -20,7 +20,7 @@ class BaseFormatter:
     def get_tool_call(self, output):
         try:
             result = self.parser.extract_tool_calls(output, {})
-            if "</think>" in self.tokenizer.get_vocab() and "</think>" in result.content:
+            if result.content and "</think>" in self.tokenizer.get_vocab() and "</think>" in result.content:
                 think_parts = []
                 content_parts = []
 
@@ -40,7 +40,7 @@ class BaseFormatter:
                 content = " ".join([p.strip() for p in content_parts if p.strip()]).strip()
             else:
                 think = ""
-                content = result.content
+                content = result.content or ""
             tool_call = []
             for call in result.tool_calls:
                 if call.type == "function":
@@ -53,8 +53,6 @@ class BaseFormatter:
                         })
                     except:
                         pass
-            if not content:
-                content = ""
             return {
                 "think": think.strip(),
                 "content": content.strip(),

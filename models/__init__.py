@@ -16,6 +16,11 @@ lowercase_mapping = {
         "qwen25",
         "qwen2_5"
     ],
+    "Qwen_3": [
+        "qwen3",
+        "qwen-3",
+        "qwen_3",
+    ],
     "API_Requester": [
         "gpt-4o",
         "gpt_4o",
