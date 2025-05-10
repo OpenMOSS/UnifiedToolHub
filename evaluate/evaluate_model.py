@@ -17,7 +17,7 @@ THINKING_MODLES = [
     "Qwen_3",
 ]
 
-def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, save_strategy, debug=False, is_strict=True):
+def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, save_strategy, debug=False, is_strict=True, lark_report=None):
     """
     评估模型进行单轮工具调用的性能
     
@@ -228,14 +228,15 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
         }
         # 添加数据集大小信息
         all_result[dataset_name]["Size"] = len(dataset)
-
         print(f"\n\n数据集：{dataset_name} 的评测结果：\n")
         print(all_result[dataset_name])
+        if not debug and lark_report:
+            lark_report(dataset_name, all_result[dataset_name])
     
     return all_result
         
 
-def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics, save_strategy, evaluate_mode, debug=False, is_strict=True):
+def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics, save_strategy, evaluate_mode, debug=False, is_strict=True, lark_report=None):
 
     """
     综合评估多轮工具调用

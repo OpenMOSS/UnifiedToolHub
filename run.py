@@ -159,6 +159,35 @@ def prepare_one_data(data, mode="all"):
         return data
     return []
 
+def check_data(data):
+    chat_history = []
+    candidate_tools = None
+    data_id = None
+    for message in data:
+        if message["role"] == "id":
+            data_id = message["content"]
+        if message["role"] == "candidate_tools":
+            candidate_tools = message["content"]
+    if not candidate_tools:
+        print(f"数据 {data_id} 的候选工具为空")
+        return False
+    for message in data:
+        if message["role"] in ["tool_call", "tool_call_ground_truth"]:
+            for tool_call in message["content"]:
+                flag = False
+                for tool in candidate_tools:
+                    if tool_call["name"] == tool["name"]:
+                        flag = True
+                        break
+                if not flag:
+                    print(f"数据 {data_id} 的工具调用{tool_call['name']}不在候选工具中")
+                    return False
+                else:
+                    if not isinstance(tool_call["parameters"], dict):
+                        print(f"数据 {data_id} 的工具调用参数不是字典")
+                        return False
+    return True
+
 
 def read_one_dataset(file_path, tag_filter):
     data_list = []
@@ -191,7 +220,7 @@ def prepare_datasets(test_datasets, mode, tag_filter):
         cut_dataset[key] = []
         for data in dataset:
             data = prepare_one_data(data, mode)
-            if len(data):
+            if check_data(data):
                 cut_dataset[key].append(data)
         if len(cut_dataset[key]) > 0:
             print(f"数据集 {key} 中的 {len(cut_dataset[key])} 条数据被选中")
@@ -201,7 +230,7 @@ def prepare_datasets(test_datasets, mode, tag_filter):
 
     return cut_dataset
 
-def get_average_result(all_result):
+def get_average_result(all_result, lark_report=None):
     average_result = {}
     all_metrics = set()
     all_names = set()
@@ -217,7 +246,10 @@ def get_average_result(all_result):
                 for dataset_name, dataset_result in all_result.items()
             ]) / total_samples
     average_result["Size"] = total_samples
-    all_result["Avg-[{}]".format(",".join(list(all_names)))] = average_result
+    dataset_name = "Avg-[{}]".format(",".join(list(all_names)))
+    all_result[dataset_name] = average_result
+    if lark_report:
+        lark_report(dataset_name, average_result)
 
 def evaluate_with_config(config_path, debug=False):
     if not os.path.exists(config_path):
@@ -264,7 +296,7 @@ def evaluate_with_config(config_path, debug=False):
 
     if 'lark' in report_strategy:
         from lark_report import LarkReport
-        lark_report = LarkReport(**lark_config)
+        lark_reporter = LarkReport(**lark_config)
 
     for model_config in test_models:
         if "path" not in model_config:
@@ -292,27 +324,26 @@ def evaluate_with_config(config_path, debug=False):
             print("模型类型不支持")
             continue
     
-        if test_mode.startswith("single"):
-            all_result = evaluate_model_for_single_round_tool_call(model_config, datasets, test_metrics, save_strategy, debug=debug, is_strict=is_strict)
-        elif test_mode.startswith("multiple"):
-            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy, evaluate_mode=test_mode.split("_")[1], debug=debug, is_strict=is_strict)
-        if len(all_result) > 1:
-            get_average_result(all_result)
+        def lark_report(dataset_name, result):
+            if 'lark' in report_strategy and not debug:
+                to_send = {
+                    "Note": model_config["note"] if "note" in model_config else model_config["path"].strip("/").split("/")[-1],
+                    "Model": model_config["path"],
+                    "Dataset": dataset_name,
+                    "test_mode": test_mode,
+                    **result
+                }
+                try:
+                    lark_reporter.send(to_send)
+                except:
+                    pass
 
-        to_send = []
-        for dataset_name, result in all_result.items():
-            to_send.append({
-                "Note": model_config["note"] if "note" in model_config else model_config["path"].strip("/").split("/")[-1],
-                "Model": model_config["path"],
-                "Dataset": dataset_name,
-                "test_mode": test_mode,
-                **result
-            })
-        if 'lark' in report_strategy and not debug:
-            try:
-                lark_report.send(to_send)
-            except:
-                pass
+        if test_mode.startswith("single"):
+            all_result = evaluate_model_for_single_round_tool_call(model_config, datasets, test_metrics, save_strategy, debug=debug, is_strict=is_strict, lark_report=lark_report)
+        elif test_mode.startswith("multiple"):
+            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy, evaluate_mode=test_mode.split("_")[1], debug=debug, is_strict=is_strict, lark_report=lark_report)
+        if len(all_result) > 1:
+            get_average_result(all_result, lark_report)
 
         if 'json' in report_strategy and not debug:
             date_time = str(datetime.datetime.now().strftime("%y%m%d_%H%M"))
@@ -378,6 +409,7 @@ def train_with_config(config_path):
     spec.loader.exec_module(config_module)
 
     model_config = getattr(config_module, 'train_models', [])
+    model_config["path"] = model_config["path"].strip('/')
     train_framework = getattr(config_module, 'train_framework', "transformers")
     train_datasets = getattr(config_module, 'train_datasets', [])
     output_path = getattr(config_module, 'output_path', None)

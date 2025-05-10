@@ -381,9 +381,6 @@ class LarkReport:
             
             records_to_create.append({"fields": res_item})
         
-        if len(records_to_create) == 1:
-            print(records_to_create[0]["fields"])
-        
         print(f"正在批量添加 {len(records_to_create)} 条记录...")
         self.bitable_create_all(app_token, table_id, records_to_create)
         
