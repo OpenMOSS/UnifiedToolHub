@@ -35,7 +35,7 @@ For specific formats, refer to [Data Format](#data-format).
 | MTU-Bench  | 386        | 181        | [Github](https://github.com/MTU-Bench-Team/MTU-Bench/) | Testing |
 | Seal-Tools | 14,122     | 4,076      | [Github](https://github.com/fairyshine/Seal-Tools) | Training, Testing |
 | TaskBench  | 4,060      | 40         | [Github](https://github.com/microsoft/JARVIS/tree/main/taskbench) | Training, Testing |
-| ToolAlpaca | 4,098      | 2,046      | [Github](https://github.com/tangqiaoyu/ToolAlpaca) | Training, Testing |
+| ToolAlpaca | 4,053      | 2,046      | [Github](https://github.com/tangqiaoyu/ToolAlpaca) | Training, Testing |
 
 For detailed dataset processing, refer to the [documentation](https://fudan-nlp.feishu.cn/docx/W1obdjUhcoS959xPUTdcSYbYn8f).
 
