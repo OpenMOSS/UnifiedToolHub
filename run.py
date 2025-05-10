@@ -230,7 +230,7 @@ def prepare_datasets(test_datasets, mode, tag_filter):
 
     return cut_dataset
 
-def get_average_result(all_result, lark_report=None):
+def get_average_result(all_result, report=None):
     average_result = {}
     all_metrics = set()
     all_names = set()
@@ -248,10 +248,12 @@ def get_average_result(all_result, lark_report=None):
     average_result["Size"] = total_samples
     dataset_name = "Avg-[{}]".format(",".join(list(all_names)))
     all_result[dataset_name] = average_result
-    if lark_report:
-        lark_report(dataset_name, average_result)
+    if report:
+        report(dataset_name, average_result)
 
 def evaluate_with_config(config_path, debug=False):
+    datetime_str = str(datetime.datetime.now().strftime("%y%m%d_%H%M"))
+
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"配置文件不存在: {config_path}")
     
@@ -324,35 +326,38 @@ def evaluate_with_config(config_path, debug=False):
             print("模型类型不支持")
             continue
     
-        def lark_report(dataset_name, result):
-            if 'lark' in report_strategy and not debug:
-                to_send = {
-                    "Note": model_config["note"] if "note" in model_config else model_config["path"].strip("/").split("/")[-1],
-                    "Model": model_config["path"],
-                    "Dataset": dataset_name,
-                    "test_mode": test_mode,
-                    **result
-                }
-                try:
-                    lark_reporter.send(to_send)
-                except:
-                    pass
+        def final_report(dataset_name, result):
+            to_send = {
+                "Note": model_config["note"] if "note" in model_config else model_config["path"].strip("/").split("/")[-1],
+                "Model": model_config["path"],
+                "Dataset": dataset_name,
+                "test_mode": test_mode,
+                **result
+            }
+            if not debug:
+                if 'lark' in report_strategy:
+                    try:
+                        lark_reporter.send(to_send)
+                    except:
+                        pass
+                if 'json' in report_strategy:
+                    path = os.path.join(
+                        json_config.get("path", "./results"), 
+                        f"report_{model_config['path'].strip('/').split('/')[-1]}_{datetime_str}.json"
+                    )
+                    history = json.load(open(path, "r", encoding="utf-8")) if os.path.exists(path) else []
+                    with open(path, "w", encoding="utf-8") as fout:
+                        json.dump(history + [to_send], fout, indent=4, ensure_ascii=False)
+                        print(f"报告已保存至: {fout.name}")
 
         if test_mode.startswith("single"):
-            all_result = evaluate_model_for_single_round_tool_call(model_config, datasets, test_metrics, save_strategy, debug=debug, is_strict=is_strict, lark_report=lark_report)
+            all_result = evaluate_model_for_single_round_tool_call(model_config, datasets, test_metrics, save_strategy, debug=debug, is_strict=is_strict, report=final_report)
         elif test_mode.startswith("multiple"):
-            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy, evaluate_mode=test_mode.split("_")[1], debug=debug, is_strict=is_strict, lark_report=lark_report)
+            all_result = evaluate_model_for_multiple_round_tool_call(model_config, datasets, test_metrics, save_strategy, evaluate_mode=test_mode.split("_")[1], debug=debug, is_strict=is_strict, report=final_report)
         if len(all_result) > 1:
-            get_average_result(all_result, lark_report)
+            get_average_result(all_result, final_report)
 
-        if 'json' in report_strategy and not debug:
-            date_time = str(datetime.datetime.now().strftime("%y%m%d_%H%M"))
-            with open(os.path.join(
-                json_config.get("path", "./results"), 
-                f"report_{model_config['path'].strip('/').split('/')[-1]}_{date_time}.json"
-            ), "w", encoding="utf-8") as fout:
-                json.dump(to_send, fout, indent=4, ensure_ascii=False)
-                print(f"报告已保存至: {fout.name}")
+        
 
 
 def tag_with_config(config_path):

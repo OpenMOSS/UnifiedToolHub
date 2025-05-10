@@ -12,19 +12,20 @@ MAX_OPS = 500  # 由飞书规定的单次最大操作数量
 
 class LarkReport:
 
-    def __init__(self, app_id, app_secret, bitable_url=None):
+    def __init__(self, app_id, app_secret, bitable_url=None, show_info=True):
         self.storage = {}
         self.APP_ID = app_id
         self.APP_SECRET = app_secret
+        self.show_info = show_info
         self._bitable_dict = {}
         if bitable_url:
             self.add_bitable("default", bitable_url)
 
-    @staticmethod
-    def _post_req(url, headers, req_body, param=None):
+    def _post_req(self, url, headers, req_body, param=None):
         if param is not None:
             url = url + '?' + urlencode(param)
-        print("Post [{}]".format(url))
+        if self.show_info:
+            print("Post [{}]".format(url))
         data = bytes(json.dumps(req_body), encoding='utf8')
         req = request.Request(url=url, data=data, headers=headers, method='POST')
         try:
@@ -37,11 +38,11 @@ class LarkReport:
         rsp_dict = json.loads(rsp_body)
         return rsp_dict
 
-    @staticmethod
-    def _get_req(url, headers, param=None, method='GET'):
+    def _get_req(self, url, headers, param=None, method='GET'):
         if param is not None:
             url = url + '?' + urlencode(param)
-        print("Get [{}]".format(url))
+        if self.show_info:
+            print("Get [{}]".format(url))
         req = request.Request(url=url, headers=headers, method=method)
         try:
             response = request.urlopen(req)
@@ -63,7 +64,7 @@ class LarkReport:
             "app_secret": self.APP_SECRET
         }
 
-        rsp_dict = LarkReport._post_req(url, headers, req_body)
+        rsp_dict = self._post_req(url, headers, req_body)
 
         code = rsp_dict.get("code", -1)
         if code != 0:
@@ -81,7 +82,7 @@ class LarkReport:
             headers["Content-Type"] = "application/json; charset=utf-8"
         if "Authorization" not in headers:
             headers["Authorization"] = "Bearer " + self.tenant_access_token()
-        return LarkReport._post_req(url, headers, req_body, param)
+        return self._post_req(url, headers, req_body, param)
 
     def delete_req(self, url: str, headers: dict = None, param=None):
         if headers is None:
@@ -90,14 +91,14 @@ class LarkReport:
             headers["Content-Type"] = "application/json; charset=utf-8"
         if "Authorization" not in headers:
             headers["Authorization"] = "Bearer " + self.tenant_access_token()
-        return LarkReport._get_req(url, headers, param, method="DELETE")
+        return self._get_req(url, headers, param, method="DELETE")
 
     def get_req(self, url: str, headers: dict = None, param=None):
         if headers is None:
             headers = {}
         if "Authorization" not in headers:
             headers["Authorization"] = "Bearer " + self.tenant_access_token()
-        return LarkReport._get_req(url, headers, param)
+        return self._get_req(url, headers, param)
 
     def tenant_access_token(self, update=False):
         now_time = datetime.now()
@@ -346,7 +347,8 @@ class LarkReport:
         return item["app_token"], item["table_id"]
 
     def send(self, res: dict | list, table_name: str="default"):
-        print("*" * 80)
+        if self.show_info:
+            print("*" * 80)
         print("正在使用飞书 API 发送数据, 下面会进行若干 Post 请求, 请保持网络通畅")
         
         app_token, table_id = self.bitable(table_name)
@@ -383,6 +385,8 @@ class LarkReport:
         
         print(f"正在批量添加 {len(records_to_create)} 条记录...")
         self.bitable_create_all(app_token, table_id, records_to_create)
-        
-        print("*" * 80)
-        print()
+
+        time.sleep(WAITING_TIME)
+        if self.show_info:
+            print("*" * 80)
+            print()
