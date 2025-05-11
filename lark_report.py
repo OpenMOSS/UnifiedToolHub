@@ -12,7 +12,7 @@ MAX_OPS = 500  # 由飞书规定的单次最大操作数量
 
 class LarkReport:
 
-    def __init__(self, app_id, app_secret, bitable_url=None, show_info=True):
+    def __init__(self, app_id, app_secret, bitable_url=None, show_info=True, *args, **kwargs):
         self.storage = {}
         self.APP_ID = app_id
         self.APP_SECRET = app_secret

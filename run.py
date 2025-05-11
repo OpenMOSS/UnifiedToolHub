@@ -213,7 +213,19 @@ def prepare_datasets(test_datasets, mode, tag_filter):
         elif key.endswith(".jsonl") and os.path.exists(key):
             all_dataset[key[:-len(".jsonl")]] = read_one_dataset(key, tag_filter)
         else:
-            print("无法测试数据集", key)
+            # 扫描当前 key 目录下所有 .jsonl 文件
+            to_test = []
+            if os.path.exists(key):
+                dir_path, key = key, key.strip().split("/")[-1]
+                for filename in os.listdir(dir_path):
+                    if filename.endswith(".jsonl"):
+                        to_test.append(filename)
+            if len(to_test) > 0:
+                print(f"在 {key} 中的找到了 {len(to_test)} 个 .jsonl 文件，请确保均为测试数据集")
+                for filename in to_test:
+                    all_dataset[key + "_" + filename[:-len(".jsonl")]] = read_one_dataset(os.path.join(dir_path, filename), tag_filter)
+            else:
+                print("无法测试数据集", dir_path)
 
     cut_dataset = {}
     for key, dataset in all_dataset.items():
@@ -284,6 +296,9 @@ def evaluate_with_config(config_path, debug=False):
 
     tag_filter = get_tag_filter(test_datasets, test_tags)
     datasets = prepare_datasets(test_datasets, test_mode, tag_filter)
+
+    if len(datasets) == 0:
+        raise ValueError("没有数据集被选中")
 
     if save_strategy.get("save_output") or save_strategy.get("save_result"):
         save_path = save_strategy["save_path"]

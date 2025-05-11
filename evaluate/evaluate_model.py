@@ -214,10 +214,10 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
             timestamp = datetime.datetime.now().strftime("%m%d_%H%M")
             path = os.path.join(save_strategy['save_path'], "_".join([timestamp, model_name, dataset_name.split("/")[-1]]))
             if save_strategy.get("jsonl", False):     
-                with open(f"{path}.jsonl", "w") as fout:
+                with open(f"{path}.jsonl", "w", encoding='utf-8') as fout:
                     fout.write("\n".join(json.dumps(key_map(save), ensure_ascii=False) for save in save_list))
             else:
-                with open(f"{path}.json", "w") as fout:
+                with open(f"{path}.json", "w", encoding='utf-8') as fout:
                     json.dump(save_list, fout, ensure_ascii=False, indent=4)
 
         # 计算最终结果
@@ -464,10 +464,11 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
             model_name = model_config.get('path').strip('/').split('/')[-1]
             timestamp = datetime.datetime.now().strftime("%m%d_%H%M")
             path = os.path.join(save_strategy['save_path'], "_".join([timestamp, model_name, dataset_name.split("/")[-1]]))
-            with open(f"{path}.jsonl", "w") as fout:
-                if save_strategy.get("jsonl", False):
+            if save_strategy.get("jsonl", False):     
+                with open(f"{path}.jsonl", "w", encoding='utf-8') as fout:
                     fout.write("\n".join(json.dumps(key_map(save), ensure_ascii=False) for save in save_list))
-                else:
+            else:
+                with open(f"{path}.json", "w", encoding='utf-8') as fout:
                     json.dump(save_list, fout, ensure_ascii=False, indent=4)
 
         # 计算最终结果
