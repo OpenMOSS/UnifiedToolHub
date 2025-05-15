@@ -159,15 +159,17 @@ def prepare_one_data(data, mode="all"):
         return data
     return []
 
-def check_data(data):
+def check_data(data, doc_type=None):
     chat_history = []
     candidate_tools = None
+    candidate_tools_message = None
     data_id = None
     for message in data:
         if message["role"] == "id":
             data_id = message["content"]
         if message["role"] == "candidate_tools":
             candidate_tools = message["content"]
+            candidate_tools_message = message
     if not candidate_tools:
         print(f"数据 {data_id} 的候选工具为空")
         return False
@@ -186,6 +188,13 @@ def check_data(data):
                     if not isinstance(tool_call["parameters"], dict):
                         print(f"数据 {data_id} 的工具调用参数不是字典")
                         return False
+    if doc_type == "openai":
+        candidate_tools_message["content"] = [
+            {
+                "type": "function",
+                "function": tool
+            } for tool in candidate_tools
+        ]
     return True
 
 
@@ -198,7 +207,7 @@ def read_one_dataset(file_path, tag_filter):
                 data_list.append(data)
     return data_list
 
-def prepare_datasets(test_datasets, mode, tag_filter):
+def prepare_datasets(test_datasets, mode, tag_filter, doc_type=None):
     if len(test_datasets) == 0:
         raise ValueError("没有指定数据集")
     else:
@@ -232,7 +241,7 @@ def prepare_datasets(test_datasets, mode, tag_filter):
         cut_dataset[key] = []
         for data in dataset:
             data = prepare_one_data(data, mode)
-            if check_data(data):
+            if check_data(data, doc_type):
                 cut_dataset[key].append(data)
         if len(cut_dataset[key]) > 0:
             print(f"数据集 {key} 中的 {len(cut_dataset[key])} 条数据被选中")
@@ -278,6 +287,7 @@ def evaluate_with_config(config_path, debug=False):
     
 
     debug = getattr(config_module, 'debug', debug)
+    doc_type = getattr(config_module, 'doc_type', None)
     is_strict = getattr(config_module, 'is_strict', True)
     test_models = getattr(config_module, 'test_models', [])
     test_datasets = getattr(config_module, 'test_datasets', [])
@@ -295,7 +305,7 @@ def evaluate_with_config(config_path, debug=False):
     lark_config = getattr(config_module, 'lark_config', {})
 
     tag_filter = get_tag_filter(test_datasets, test_tags)
-    datasets = prepare_datasets(test_datasets, test_mode, tag_filter)
+    datasets = prepare_datasets(test_datasets, test_mode, tag_filter, doc_type=doc_type)
 
     if len(datasets) == 0:
         raise ValueError("没有数据集被选中")
@@ -428,6 +438,7 @@ def train_with_config(config_path):
     config_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(config_module)
 
+    doc_type = getattr(config_module, 'doc_type', None)
     model_config = getattr(config_module, 'train_models', [])
     model_config["path"] = model_config["path"].strip('/')
     train_framework = getattr(config_module, 'train_framework', "transformers")
@@ -441,7 +452,7 @@ def train_with_config(config_path):
     prepare_strategy["split_ratio"] = prepare_strategy.get("split_ratio", 1)
 
     tag_filter = get_tag_filter(train_datasets, train_tags)
-    datasets = prepare_datasets(train_datasets, "all", tag_filter)
+    datasets = prepare_datasets(train_datasets, "all", tag_filter, doc_type=doc_type)
 
     if not datasets or not output_path:
         raise ValueError("输入输出文件未指定")
