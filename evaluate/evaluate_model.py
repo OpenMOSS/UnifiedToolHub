@@ -162,8 +162,7 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
             prompt_list, 
             truncation=truncate_prompt_tokens is not None,
             max_length=truncate_prompt_tokens,
-            return_tensors="pt", 
-        ).input_ids.tolist()
+        ).input_ids
         output_list = llm.generate(
             [TokensPrompt(prompt_token_ids=ids) for ids in batch_input_ids],
             sampling_params=sampling_params,
@@ -412,8 +411,7 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
             prompt_list, 
             truncation=truncate_prompt_tokens is not None,
             max_length=truncate_prompt_tokens,
-            return_tensors="pt", 
-        ).input_ids.tolist()
+        ).input_ids
         output_list = llm.generate(
             [TokensPrompt(prompt_token_ids=ids) for ids in batch_input_ids],
             sampling_params=sampling_params,
