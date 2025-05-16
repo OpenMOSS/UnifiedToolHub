@@ -76,6 +76,7 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
     else:
         try:
             from vllm import LLM, SamplingParams
+            from vllm.inputs import TokensPrompt
         except ImportError:
             print("没有安装 vllm ，仅支持通过 API 进行评测。\n\n")
             return {}
@@ -152,7 +153,21 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
                 break
 
         # 批量生成模型输出
-        output_list = llm.generate(prompt_list, sampling_params=sampling_params)
+        tokenizer = llm.get_tokenizer()
+        tokenizer.truncation_side = "left"
+        truncate_prompt_tokens = model_config.get("sampling_params",{}).get("truncate_prompt_tokens", None)
+        if truncate_prompt_tokens is None:
+            truncate_prompt_tokens = model_config.get("truncate_prompt_tokens", None)
+        batch_input_ids = tokenizer.batch_encode_plus(
+            prompt_list, 
+            truncation=truncate_prompt_tokens is not None,
+            max_length=truncate_prompt_tokens,
+            return_tensors="pt", 
+        ).input_ids.tolist()
+        output_list = llm.generate(
+            [TokensPrompt(prompt_token_ids=ids) for ids in batch_input_ids],
+            sampling_params=sampling_params,
+        )
 
         # 调试模式下打印第一个输出
         if debug:
@@ -298,6 +313,7 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
     else:
         try:
             from vllm import LLM, SamplingParams
+            from vllm.inputs import TokensPrompt
         except ImportError:
             print("没有安装 vllm ，仅支持通过 API 进行评测。\n\n")
             return {}
@@ -385,11 +401,23 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
                 print("\n"*3)
                 print(prompt_list)
                 break
-        
-        # print(data_num)
 
         # 批量生成模型输出
-        output_list = llm.generate(prompt_list, sampling_params=sampling_params)
+        tokenizer = llm.get_tokenizer()
+        tokenizer.truncation_side = "left"
+        truncate_prompt_tokens = model_config.get("sampling_params",{}).get("truncate_prompt_tokens", None)
+        if truncate_prompt_tokens is None:
+            truncate_prompt_tokens = model_config.get("truncate_prompt_tokens", None)
+        batch_input_ids = tokenizer.batch_encode_plus(
+            prompt_list, 
+            truncation=truncate_prompt_tokens is not None,
+            max_length=truncate_prompt_tokens,
+            return_tensors="pt", 
+        ).input_ids.tolist()
+        output_list = llm.generate(
+            [TokensPrompt(prompt_token_ids=ids) for ids in batch_input_ids],
+            sampling_params=sampling_params,
+        )
 
         # 调试模式下打印第一个输出
         if debug:
