@@ -10,7 +10,7 @@ from train import prepare_datasets_for_transformers_trainer
 from tag import stat_tagger, normal_tagger
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ALL_DATASET = ["API-Bank", "BFCL", "MTU-Bench", "Seal-Tools", "TaskBench", "ToolAlpaca"]
+ALL_DATASET = ["API-Bank", "BFCL", "MTU-Bench", "Seal-Tools", "TaskBench", "ToolAlpaca", "RapidTools"]
 
 def setup_parser():
     parser = argparse.ArgumentParser(description='Graph Evaluation Tools')

@@ -19,6 +19,7 @@ urls = {
     "TaskBench": "https://raw.githubusercontent.com/microsoft/JARVIS/refs/heads/main/taskbench/",
     "MTU-Bench": "https://raw.githubusercontent.com/MTU-Bench-Team/MTU-Bench/refs/heads/main/MTU-Eval/benchmark/",
     "Seal-Tools": "https://raw.githubusercontent.com/fairyshine/Seal-Tools/refs/heads/master/Seal-Tools_Dataset/",
+    "RapidTools": "https://huggingface.co/datasets/WillQvQ/RapidTools/resolve/main/",
 }
 
 download_files = {
@@ -90,6 +91,10 @@ download_files = {
             "level-3.json",
         ]
     },
+    "RapidTools": [
+        "data_for_UnifiedToolHub.jsonl",
+        "tools_for_UnifiedToolHub.jsonl",
+    ],
 }
 
 process_method = {
@@ -99,6 +104,7 @@ process_method = {
     "BFCL": process_some,
     "Seal-Tools": process_seal_tools,
     "API-Bank": process_data_from_original_dataset,
+    "RapidTools": process_rapid_tools,
 }
 
 
@@ -134,6 +140,22 @@ def download_file(url, file_path):
 
 
 def download_one_dataset(dataset_name):
+
+    if dataset_name == "RapidTools":
+        while True:
+            print(f"\n数据集 RapidTools 的大小为693MB，请确定是否进行下载")
+            choice = input("[Y/n] ").strip().lower()
+            # 空输入(直接回车)，默认为同意
+            if not choice:
+                break 
+            if choice in ('y', 'yes'):
+                break
+            elif choice in ('n', 'no'):
+                print("下载已取消。")
+                return False
+            else:
+                print("无效输入，请输入 y/n 或 yes/no")
+
     if urls[dataset_name] == "Too Large.":
         print(f"数据集 {dataset_name} 太大，请按照 datasets/downloaded/{dataset_name}/README.md 中的步骤自行下载。")
         return False

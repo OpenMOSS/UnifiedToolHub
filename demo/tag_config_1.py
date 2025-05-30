@@ -26,6 +26,8 @@ datasets = [
     # "Seal-Tools",
     # "TaskBench",
     # "ToolAlpaca", 
+    # "RapidTools",
+
     # # 除了使用数据集名称外，也可以指定具体的数据文件
     "./datasets/processed/BFCL/live_parallel.jsonl",
     "./datasets/processed/MTU-Bench/S-S.jsonl"
