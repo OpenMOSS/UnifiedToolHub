@@ -36,6 +36,7 @@ For specific formats, refer to [Data Format](#data-format).
 | Seal-Tools | 14,122     | 4,076      | [Github](https://github.com/fairyshine/Seal-Tools) | Training, Testing |
 | TaskBench  | 4,060      | 40         | [Github](https://github.com/microsoft/JARVIS/tree/main/taskbench) | Training, Testing |
 | ToolAlpaca | 4,053      | 2,046      | [Github](https://github.com/tangqiaoyu/ToolAlpaca) | Training, Testing |
+| RapidTools | 203,472  | 4722      | [Hugging Face](https://huggingface.co/datasets/WillQvQ/RapidTools) | Training, Testing |
 
 For detailed dataset processing, refer to the [documentation](https://fudan-nlp.feishu.cn/docx/W1obdjUhcoS959xPUTdcSYbYn8f).
 
@@ -202,6 +203,7 @@ train_datasets = [
     "Seal-Tools",
     "TaskBench",
     "ToolAlpaca",
+    "RapidTools",
     # Alternatively, specify specific data files
     # "./datasets/processed/BFCL/live_parallel.jsonl",
     # "./datasets/processed/MTU-Bench/M-M.jsonl"

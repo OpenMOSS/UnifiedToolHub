@@ -37,6 +37,8 @@ python datasets deal <数据集>
 | Seal-Tools |  14122   | 4076      | [Github](https://github.com/fairyshine/Seal-Tools) | 训练、测试 |
 | TaskBench  |  4060    | 40        | [Github](https://github.com/microsoft/JARVIS/tree/main/taskbench) | 训练、测试 |
 | ToolAlpaca |  4053    | 2046      | [Github](https://github.com/tangqiaoyu/ToolAlpaca) | 训练、测试 |
+| RapidTools | 203,472  | 4722      | [Hugging Face](https://huggingface.co/datasets/WillQvQ/RapidTools) | 训练、测试 |
+
 
 数据集处理的详细过程参见[文档](https://fudan-nlp.feishu.cn/docx/W1obdjUhcoS959xPUTdcSYbYn8f)
 
@@ -205,6 +207,7 @@ train_datasets = [
     "Seal-Tools",
     "TaskBench",
     "ToolAlpaca", 
+    "RapidTools",
     # # 除了使用数据集名称外，也可以指定具体的数据文件
     # "./datasets/processed/BFCL/live_parallel.jsonl",
     # "./datasets/processed/MTU-Bench/M-M.jsonl"
