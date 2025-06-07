@@ -20,6 +20,7 @@ urls = {
     "MTU-Bench": "https://raw.githubusercontent.com/MTU-Bench-Team/MTU-Bench/refs/heads/main/MTU-Eval/benchmark/",
     "Seal-Tools": "https://raw.githubusercontent.com/fairyshine/Seal-Tools/refs/heads/master/Seal-Tools_Dataset/",
     "RapidTools": "https://huggingface.co/datasets/WillQvQ/RapidTools/resolve/main/",
+    "BUTTON": "https://raw.githubusercontent.com/PKU-Baichuan-MLSystemLab/BUTTON/refs/heads/main/data/",
 }
 
 download_files = {
@@ -95,6 +96,9 @@ download_files = {
         "data_for_UnifiedToolHub.jsonl",
         "tools_for_UnifiedToolHub.jsonl",
     ],
+    "BUTTON": [
+        "button_instruct.jsonl"
+    ],
 }
 
 process_method = {
@@ -105,6 +109,7 @@ process_method = {
     "Seal-Tools": process_seal_tools,
     "API-Bank": process_data_from_original_dataset,
     "RapidTools": process_rapid_tools,
+    "BUTTON": process_button,
 }
 
 
