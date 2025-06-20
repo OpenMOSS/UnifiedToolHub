@@ -17,6 +17,22 @@ THINKING_MODLES = [
     "Qwen_3",
 ]
 
+def clean_surrogates(text):
+    if isinstance(text, str):
+        # 移除或替换代理字符
+        return text.encode('utf-8', 'ignore').decode('utf-8')
+    return text
+
+def clean_data_for_json(data):
+    if isinstance(data, dict):
+        return {k: clean_data_for_json(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [clean_data_for_json(item) for item in data]
+    elif isinstance(data, str):
+        return clean_surrogates(data)
+    else:
+        return data
+        
 def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, save_strategy, debug=False, is_strict=True, report=None):
     """
     评估模型进行单轮工具调用的性能
@@ -229,10 +245,10 @@ def evaluate_model_for_single_round_tool_call(model_config, datasets, metrics, s
             path = os.path.join(save_strategy['save_path'], "_".join([timestamp, model_name, dataset_name.split("/")[-1]]))
             if save_strategy.get("jsonl", False):     
                 with open(f"{path}.jsonl", "w", encoding='utf-8') as fout:
-                    fout.write("\n".join(json.dumps(key_map(save), ensure_ascii=False) for save in save_list))
+                    fout.write("\n".join(json.dumps(key_map(save), ensure_ascii=False) for save in clean_data_for_json(save_list)))
             else:
                 with open(f"{path}.json", "w", encoding='utf-8') as fout:
-                    json.dump(save_list, fout, ensure_ascii=False, indent=4)
+                    json.dump(clean_data_for_json(save_list), fout, ensure_ascii=False, indent=4)
 
         # 计算最终结果
         all_result[dataset_name] = {
@@ -492,10 +508,10 @@ def evaluate_model_for_multiple_round_tool_call(model_config, datasets, metrics,
             path = os.path.join(save_strategy['save_path'], "_".join([timestamp, model_name, dataset_name.split("/")[-1]]))
             if save_strategy.get("jsonl", False):     
                 with open(f"{path}.jsonl", "w", encoding='utf-8') as fout:
-                    fout.write("\n".join(json.dumps(key_map(save), ensure_ascii=False) for save in save_list))
+                    fout.write("\n".join(json.dumps(key_map(save), ensure_ascii=False) for save in clean_data_for_json(save_list)))
             else:
                 with open(f"{path}.json", "w", encoding='utf-8') as fout:
-                    json.dump(save_list, fout, ensure_ascii=False, indent=4)
+                    json.dump(clean_data_for_json(save_list), fout, ensure_ascii=False, indent=4)
 
         # 计算最终结果
         # 长度和工具调用数按调用轮次进行平均

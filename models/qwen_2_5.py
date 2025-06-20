@@ -1,3 +1,4 @@
+import json
 from datetime import date
 try:
     from vllm.entrypoints.openai.tool_parsers import Hermes2ProToolParser
@@ -30,7 +31,7 @@ class Qwen_2_5(BaseFormatter):
                 new_messages.append({
                     "role": "assistant",
                     "content": "\n".join(
-                        f"<tool_call>{call}</tool_call>".replace("parameters", "arguments")
+                        f"<tool_call>{json.dumps(call)}</tool_call>".replace("parameters", "arguments")
                         for call in message["content"]
                     )
                 })

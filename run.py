@@ -440,7 +440,7 @@ def train_with_config(config_path):
 
     doc_type = getattr(config_module, 'doc_type', None)
     model_config = getattr(config_module, 'train_models', [])
-    model_config["path"] = model_config["path"].strip('/')
+    model_config = [m.strip("/") for m in model_config]
     train_framework = getattr(config_module, 'train_framework', "transformers")
     train_datasets = getattr(config_module, 'train_datasets', [])
     output_path = getattr(config_module, 'output_path', None)
