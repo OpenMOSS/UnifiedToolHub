@@ -83,7 +83,7 @@ Today Date: {date.today().strftime('%d %b %Y')}"""
             return {
                 "think": think.strip(),
                 "content": content.strip(),
-                "tool_calls": tool_calls
+                "tool_call": tool_calls
             }
         else:
             return super().get_tool_call(output)
