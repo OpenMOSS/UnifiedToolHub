@@ -34,15 +34,31 @@ class Llama_3_2(BaseFormatter):
         self.assistant_end = "<|eot_id|>"
     
     def get_prompt(self, messages, candidate_tools, add_generation_prompt=True):
+        def convert_json_to_pythonic(tools):
+            function_calls = []
+            for tool in tools:
+                params = {}
+                parameters=tool.get('parameters',{})
+                for param_name, param_value in parameters.items():
+                    params[param_name] = f'"{param_value}"' if isinstance(param_value, str) else param_value
+                
+                param_str = ', '.join(f'{k}={v}' for k, v in params.items())
+                func_call = f"{tool['name']}({param_str})"
+                
+                function_calls.append(func_call)
+            
+            return f"[{', '.join(function_calls)}]"
         new_messages = []
         tools_str = "\n".join([json.dumps(tool) for tool in candidate_tools])
 
         new_messages.append({'role':"system","content":self.SYSTEM_PROMPT+tools_str})
         for message in messages:
             if message["role"] == "tool_call":
+                tool_calls=message["content"] if isinstance(message["content"],list) else [message["content"]]
+                tool_call_str=convert_json_to_pythonic(tool_calls)
                 new_messages.append({
                     "role": "assistant",
-                    "content":(str(message["content"][0] if len(message["content"])==1 else message["content"]))
+                    "content":tool_call_str
                 })
             elif message["role"] == "tool_response":
                 for value in message["content"].values():
