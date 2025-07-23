@@ -33,4 +33,12 @@ lowercase_mapping = {
         "deepseek_r1",
         "deepseekr1",   
     ],
+    "Llama_3_2": [
+        "llama3.2",
+        "llama-3.2",
+        "llama_3_2",
+        "llama_32",
+        "llama32",
+        "llama3_2"
+    ],
 }
